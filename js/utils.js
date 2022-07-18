@@ -318,11 +318,13 @@ function setGrid(mod) {
     var bbox2 = new THREE.Box3().setFromObject(mod);
 
     /*NORMAL GRID HELPER*/
+    if (gridHelper == undefined){
     gridHelper = new THREE.GridHelper(bbox2.max.x * 4, 40, 0xe6e600, 0x808080);
+    }
     //Set size of grid to cover objects of all sizes based on the non visible box3() size.
     gridHelper.position.y = bbox2.min.y; //Set grid underneath loaded model object
     gridHelper.visible = false; //Grid visibility initially false, until grid checkbox is selected
-    mod.add(gridHelper);
+    scene.add(gridHelper);
 }
 
 var gridHelper;

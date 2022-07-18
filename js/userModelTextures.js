@@ -464,6 +464,7 @@ var loadFiles = function (files) {
                 model_list.push(model)
                 model_counts++
                 scene.add(model);
+                sample_model = model
                 g_model_is_loaded = true
             });
         });
