@@ -35,7 +35,7 @@
     <script src="js/OrbitControls.js?nocache"></script>
     <script src="js/TransformControls.js?nocache"></script>
 
-    <script src="js/THREEx.FullScreen.js?nocache"></script>
+    <!-- <script src="js/THREEx.FullScreen.js?nocache"></script> -->
     <script src="js/THREEx.WindowResize.js?nocache"></script>
     <script src="js/screenfull.min.js?nocache"></script>
 
@@ -106,13 +106,13 @@
         <div id="stats"></div>
 
         <button id="collapse_side" title="Collapse Side Menu">&larr;</button>
-        <button id="collapse_btm" title="Collapse Bottom Menu">&darr;</button>
+        <!-- <button id="collapse_btm" title="Collapse Bottom Menu">&darr;</button> -->
 
         <!--Side Menu Start-->
         <div class="side_menu">
             <ul class="menu_item">
 
-                <li id="header">
+                <!-- <li id="header">
                     <table style="width:100%">
                         <tr>
                             <th style="font-size: 15px;">Viewer Theme</th>
@@ -120,7 +120,7 @@
                             <th style="font-size: 11px;"><button id="darkSkin">Dark</button></th>
                         </tr>
                     </table>
-                </li>
+                </li> -->
 
                 <li class='dropdown'>
                     <a href='#'><img src="images/dir_light_icon.png" class="image" /> Lighting</a>
@@ -128,7 +128,7 @@
                         <li><span>Ambient Light</span></li>
                         <li>
                             <label class="switch">
-                                <input class="check" type="checkbox" id="ambient_light">
+                                <input class="check" type="checkbox" id="ambient_light", checked="true">
                                 <span class="toggle round"></span>
                             </label>
                         </li>
@@ -139,19 +139,10 @@
                         <li><span style="font-size: 12px">B</span></li>
                         <li><div id="ambient_blue"></div></li>
 
-                        <li><hr style="margin-top:15px"/></li>
-                        <li>Directional Light Colour</li>                 
-                            <li><span style="font-size: 12px">R</span></li>
-                            <li><div id="red"></div></li>
-                            <li><span style="font-size: 12px">G</span></li>
-                            <li><div id="green"></div></li>
-                            <li><span style="font-size: 12px">B</span></li>
-                            <li><div id="blue"></div></li>                           
-                        
-                            <li><hr style="margin-top:15px" /></li>
-                            <li>Point Light Intensity</li>
-                            <li><span style="font-size: 12px">Intensity Value</span></li>
-                            <li><div id="point_light"></div></li>   
+                        <li><hr style="margin-top:15px" /></li>
+                        <li>Point Light Intensity</li>
+                        <li><span style="font-size: 12px">Intensity Value</span></li>
+                        <li><div id="point_light"></div></li>   
                     </ul>                   
                 </li>
 
@@ -206,7 +197,7 @@
                     </ul>
                 </li>
 
-                <li class='dropdown'>
+                <!-- <li class='dropdown'>
                     <a href='#'><img src="images/glowing.png" width="32" height="32" class="image" />Glow Outline</a>
                     <ul>
                         <li> <span>Glow Outline</span></li>
@@ -224,7 +215,7 @@
                         <li><input type='text' class="glow_select" /></li>
                         <li><em id='basic-log'></em></li>
                     </ul>
-                </li>
+                </li> -->
 
                 <li class='dropdown'>
                     <a href='#'><img src="images/smoothed.png" width="32" height="32" class="image" />Smooth Model</a>
@@ -249,26 +240,95 @@
                 </li>
 
                 <li class='dropdown'>
-                    <a href='#'><img src="images/folder_icon.png" class="image" />Select/Drop Model File</a>
+                    <a href='#'><img src="images/grid.png" class="image" />Model View Helpers</a>
+                    <ul style="font-size: 13.5px">
+                        <li style="display:inline-block; margin:0 25px 0 0;">
+                            <span style="font-size:18px">Grid</span>
+                            <label class="switch helper">
+                                <input type="checkbox" id="grid">
+                                <span class="toggle grid round"></span>
+                            </label>
+                        </li>
+                        <li style="display:inline-block; margin:0 25px 0 0;">
+                            <span style="font-size:18px">Polar-grid</span>
+                            <label class="switch helper">
+                                <input type="checkbox" id="polar_grid">
+                                <span class="toggle grid round"></span>
+                            </label>
+                        </li>
+                        <li style="display:inline-block; margin:0 25px 0 0;">
+                            <span style="font-size:18px">Axis</span>
+                            <label class="switch helper">
+                                <input type="checkbox" id="axis">
+                                <span class="toggle grid round"></span>
+                            </label>
+                        </li>
+                        <li style="display:inline-block; margin:0 25px 0 0;">
+                            <span style="font-size:18px">Model Box</span>
+                            <label class="switch helper">
+                                <input type="checkbox" id="bBox">
+                                <span class="toggle grid round"></span>
+                            </label>
+                        </li>
+                    </ul>
+                </li>
+                <li class='dropdown'>
+                    <a href='#'><img src="images/rotation.png" class="image" />Model Position and Rotation</a>
                     <ul>
-                        <li style="background: #d9d9f2; color: black; text-align: center">Select from button or drag and drop model onto the viewer</li>
+                        <li style="display:inline-block;  margin:0 35px 0 0;"><span>Auto Rotate</span></li>
+                        <li style="display:inline-block">
+                            <span>Set Rotation Speed</span>
+                            <span id="rot_slider"></span>
+                        </li>
+                        <li>
+                            <label class="switch">
+                                <input type="checkbox" id="rotation">
+                                <span class="toggle round"></span>
+                            </label>
+                        </li>
+                        <!-- <li>Fix Rotation of Imported Models<hr style="margin-top:0px" /></li>
 
-                        <li style="margin-top: 12px; margin-bottom: 16px;">
+                        <li>
+                            <div id="rotation">
+                                <div class="radioBtn">
+                                    <input type="radio" id="r1" name="rotate" value="rotateX"> Rotate X
+                                </div>  
+                                        
+                                <div class="radioBtn">
+                                    <input type="radio" id="r2" name="rotate" value="rotateY"> Rotate Y
+                                </div>  
+
+                                <div class="radioBtn">
+                                    <input type="radio" id="r3" name="rotate" value="rotateZ"> Rotate Z
+                                </div>                             
+                            </div>
+                        </li> -->
+
+                        <li><button class="resetRotateButton" type='reset' id="reset_rot">Reset</button></li>                     
+                    </ul>
+                </li>
+
+                <li class='dropdown'>
+                    <a href='#'><img src="images/folder_icon.png" class="image" />Load Models Directory</a>
+                    <ul>
+                        <!-- <li style="background: #d9d9f2; color: black; text-align: center">Select from button or drag and drop model onto the viewer</li> -->
+
+                        <!-- <li style="margin-top: 12px; margin-bottom: 16px;">
                              <label for="obj_file" class="model-upload">
                                  <i style="margin-right: 5px;" class="fa fa-upload"></i> Load Model 
                             </label>
                             <button class="qBtn" id="q_btn" title="Model Loading Help"><i class="fa fa-question-circle q_mark"></i></button>
-                        </li>                  
-                        <li><input onclick="this.value=null;" type="file" id="obj_file" /></li>                       
+                        </li>                   -->
+                        <!-- <li><input onclick="this.value=null;" type="file" id="obj_file" /></li>                        -->
 
                         <li style="margin-top: 12px; margin-bottom: 16px;">
                             <label for="modelPlusTexture" class="model-upload">
-                                <i style="margin-right: 5px;" class="fa fa-upload"></i> Model and Textures
+                                <i style="margin-right: 5px;" class="fa fa-upload"></i> Models Directory
                             </label>                          
                         </li>         
                         <li><input id="modelPlusTexture" type="file"  webkitdirectory mozdirectory class="model-upload"></li>
 
-                        <li><button type="button" id="remove"><i style="margin-right: 5px;" class="fa fa-trash"></i> Remove file</button></li>
+                        <!-- <li><button type="button" id="remove"><i style="margin-right: 5px;" class="fa fa-trash"></i> Remove file</button></li> -->
                         <li><output id="result" /></li>
                     </ul>
                 </li>
@@ -316,45 +376,10 @@
         <div id="bottom_menu">
             <ul class="bottom_menu_item">
                 <div class="slidecontainer">
-                    <input type="range" id="frames_slider" min="1" max="100" value="50" class="slider" style="width: 80%;" id="myRange">
+                    <input type="range" id="frames_slider" min="1" max="100" value="50" class="slider" style="width: 95%; margin-left: 2.5%;" id="myRange">
                   </div>
-                <li class='dropdown'>
-                    <a href='#'><img src="images/rotation.png" class="image" />Model Rotation</a>
-                    <ul>
-                        <li style="display:inline-block;  margin:0 35px 0 0;"><span>Auto Rotate</span></li>
-                        <li style="display:inline-block">
-                            <span>Set Rotation Speed</span>
-                            <span id="rot_slider"></span>
-                        </li>
-                        <li>
-                            <label class="switch">
-                                <input type="checkbox" id="rotation">
-                                <span class="toggle round"></span>
-                            </label>
-                        </li>
-                        <li>Fix Rotation of Imported Models<hr style="margin-top:0px" /></li>
 
-                        <li>
-                            <div id="rotation">
-                                <div class="radioBtn">
-                                    <input type="radio" id="r1" name="rotate" value="rotateX"> Rotate X
-                                </div>  
-                                        
-                                <div class="radioBtn">
-                                    <input type="radio" id="r2" name="rotate" value="rotateY"> Rotate Y
-                                </div>  
-
-                                <div class="radioBtn">
-                                    <input type="radio" id="r3" name="rotate" value="rotateZ"> Rotate Z
-                                </div>                             
-                            </div>
-                        </li>
-
-                        <li><button class="resetRotateButton" type='reset' id="reset_rot">Reset</button></li>                     
-                    </ul>
-                </li>
-
-                <li class='dropdown'>
+                <!-- <li class='dropdown'>
                     <a href='#'><img src="images/scale.png" class="image" />Transform Model</a>
                     <ul>
                         <li style="margin-left:25px; font-size: 15px">
@@ -374,54 +399,20 @@
                         </li>
                         
                     </ul>
-                </li>
-
-                <li class='dropdown'>
-                    <a href='#'><img src="images/grid.png" class="image" />Model View Helpers</a>
-                    <ul style="font-size: 13.5px">
-                        <li style="display:inline-block; margin:0 25px 0 0;">
-                            <span style="font-size:18px">Grid</span>
-                            <label class="switch helper">
-                                <input type="checkbox" id="grid">
-                                <span class="toggle grid round"></span>
-                            </label>
-                        </li>
-                        <li style="display:inline-block; margin:0 25px 0 0;">
-                            <span style="font-size:18px">Polar-grid</span>
-                            <label class="switch helper">
-                                <input type="checkbox" id="polar_grid">
-                                <span class="toggle grid round"></span>
-                            </label>
-                        </li>
-                        <li style="display:inline-block; margin:0 25px 0 0;">
-                            <span style="font-size:18px">Axis</span>
-                            <label class="switch helper">
-                                <input type="checkbox" id="axis">
-                                <span class="toggle grid round"></span>
-                            </label>
-                        </li>
-                        <li style="display:inline-block; margin:0 25px 0 0;">
-                            <span style="font-size:18px">Model Box</span>
-                            <label class="switch helper">
-                                <input type="checkbox" id="bBox">
-                                <span class="toggle grid round"></span>
-                            </label>
-                        </li>
-                    </ul>
-                </li>
+                </li> -->
             </ul>           
         </div>
         <!--Bottom Menu End-->
 
         <div id="main_viewer"></div>
 
-        <div id="fullscreen">
+        <!-- <div id="fullscreen">
             <button id="fullscreenBtn" title="Fullscreen Mode" style="border: 0; float:right; background: transparent">
                 <img src="images/fullscreen.png" width="32" height="32" alt="fullscreen" />
             </button>
-        </div>
+        </div> -->
 
-        <div id="sampleMods">
+        <!-- <div id="sampleMods">
             Sample Models
             <br />
             <div class="select">
@@ -435,7 +426,7 @@
                 </select>
                 <br /><br />
             </div>
-        </div>
+        </div> -->
 
        <div id="anims">   
             <span>Select Animation</span>
@@ -449,14 +440,17 @@
         </div>
 
 
+        <script src="js/three_buffer_geo_utils.js"></script>
         <script src="js/menu.js"></script>
         <script src="js/utils.js"></script>
+        <script src="js/FramesHandler.js"></script>
+        <script src="js/myObjLoader.js"></script>
         <script src="js/main.js"></script>
-        <script src="js/userModelTextures.js"></script>
-        <script src="js/userModel.js"></script>     
+        <!-- <script src="js/userModelTextures.js"></script>
+        <script src="js/userModel.js"></script>      -->
     </div>
 
-    <script src="js/ColourTheme.js"></script>
+    <!-- <script src="js/ColourTheme.js"></script> -->
 
     <script>
         $(document).ready(function () {

@@ -1,3 +1,4 @@
+
 function stats(modelName, geometry, numOfMeshes) {
 
     if (geometry !== undefined) {
@@ -84,184 +85,198 @@ function setCamera(mod) {
 
     /*MODELS OF DIFFERENT SIZES TO FIT IN CAMERA VIEW*/
     var height = bbox.getSize().y;
-    var dist = height / (2 * Math.tan(camera.fov * Math.PI / 360));
+    // var dist = height / (2 * Math.tan(camera.fov * Math.PI / 360));
+    var dist = height / 2 / Math.tan(camera.fov * Math.PI / 360);
     var pos = scene.position;
-    camera.position.set(pos.x, pos.y, dist * 3.50);
+    camera.position.set(pos.x, pos.y, dist*1.2);
     camera.lookAt(pos);
 }
 
-$('#glow_check').on('change', function () {
+// $('#glow_check').on('change', function () {
 
-        if (glow.checked) {
-            $('input.check').not(this).prop('checked', false);
-            outlinePass.enabled = true;
-        }
-        else {
-            outlinePass.enabled = false;
-        }
+//         if (glow.checked && g_current_model) {
+//             outlinePass.selectedObjects = [g_current_model];
+//             $('input.check').not(this).prop('checked', false);
+//             outlinePass.enabled = true;
+//         }
+//         else {
+//             outlinePass.enabled = false;
+//         }
         
-});
+// });
 
-function setWireFrame(mod) {
+// function setWireFrame(mod) {
 
-    if (modelWithTextures || fbxLoaded || gltfLoaded) {
+//     if (modelWithTextures || fbxLoaded || gltfLoaded) {
 
-        $('#wire_check').on('change', function () {
+//         $('#wire_check').on('change', function () {
 
-                $('input.check').not(this).prop('checked', false);
+//                 $('input.check').not(this).prop('checked', false);
 
-                if (wire.checked) {
+//                 if (wire.checked) {
 
-                    materials.wireframeAndModel.visible = false;
-                     if (mod.material.length > 1) {
-                         for (var i = 0; i < mod.material.length; i++) {
+//                     materials.wireframeAndModel.visible = false;
+//                      if (mod.material.length > 1) {
+//                          for (var i = 0; i < mod.material.length; i++) {
  
-                             mod.material[i].wireframe = true;
-                         }
-                     }
-                     else {
-                         mod.material.wireframe = true;
-                     }
+//                              mod.material[i].wireframe = true;
+//                          }
+//                      }
+//                      else {
+//                          mod.material.wireframe = true;
+//                      }
 
-                }
-                else {
-                    if (mod.material.length > 1) {
-                         for (var i = 0; i < mod.material.length; i++) {
+//                 }
+//                 else {
+//                     if (mod.material.length > 1) {
+//                          for (var i = 0; i < mod.material.length; i++) {
  
-                             mod.material[i].wireframe = false;
-                         }
-                     }
-                     else {
-                        mod.material.wireframe = false;
-                     }
-                }
-            });
+//                              mod.material[i].wireframe = false;
+//                          }
+//                      }
+//                      else {
+//                         mod.material.wireframe = false;
+//                      }
+//                 }
+//             });
       
-        }
-    else {
+//         }
+//     else {
 
-        $('#wire_check').on('change', function () {
+//         $('#wire_check').on('change', function () {
 
-            $('input.check').not(this).prop('checked', false);
+//             $('input.check').not(this).prop('checked', false);
 
-            if (wire.checked) {
-                materials.wireframeAndModel.visible = false;
-                mod.material = materials.wireframeMaterial;
-            }
-            else {
-                mod.material = materials.default_material;
-            }
-        });
-    }
-}
+//             if (wire.checked) {
+//                 materials.wireframeAndModel.visible = false;
+//                 mod.material = materials.wireframeMaterial;
+//             }
+//             else {
+//                 mod.material = materials.default_material;
+//             }
+//         });
+//     }
+// }
 
-function setWireframeAndModel(mod) {
+// function setWireframeAndModel(mod) {
 
-    $('#model_wire').on('change', function () {
+//     $('#model_wire').on('change', function () {
 
-        $('input.check').not(this).prop('checked', false);
+//         $('input.check').not(this).prop('checked', false);
 
-        if (modelWithTextures || fbxLoaded || gltfLoaded) {
-            if (mod.material.length > 1) {
-                for (var i = 0; i < mod.material.length; i++) {
+//         if (modelWithTextures || fbxLoaded || gltfLoaded) {
+//             if (mod.material.length > 1) {
+//                 for (var i = 0; i < mod.material.length; i++) {
 
-                    mod.material[i].wireframe = false;
-                }
-            }
-            else {
-                mod.material.wireframe = false;
-            }
+//                     mod.material[i].wireframe = false;
+//                 }
+//             }
+//             else {
+//                 mod.material.wireframe = false;
+//             }
 
-            if (model_wire.checked) {
-                materials.wireframeAndModel.visible = true;
-            }
-            else {
-                materials.wireframeAndModel.visible = false;
-            }
-        }
-        //model without textures
-        else {
-            mod.material = materials.default_material;
+//             if (model_wire.checked) {
+//                 materials.wireframeAndModel.visible = true;
+//             }
+//             else {
+//                 materials.wireframeAndModel.visible = false;
+//             }
+//         }
+//         //model without textures
+//         else {
+//             mod.material = materials.default_material;
 
-            if (model_wire.checked) {
-                materials.wireframeAndModel.visible = true;
-            }
-            else {
-                materials.wireframeAndModel.visible = false;
-                mod.material = materials.default_material;
-            }
-        }
+//             if (model_wire.checked) {
+//                 materials.wireframeAndModel.visible = true;
+//             }
+//             else {
+//                 materials.wireframeAndModel.visible = false;
+//                 mod.material = materials.default_material;
+//             }
+//         }
        
-    });
+//     });
 
-}
+// }
 
-function setSmooth(mod) {
+// function setSmooth(mod) {
 
-    var smooth_geom;
+//     var smooth_geom;
 
-    mod.traverse(function (child) {
+//     mod.traverse(function (child) {
 
-        if (child instanceof THREE.Mesh) {
+//         if (child instanceof THREE.Mesh) {
 
-            $('#smooth').change(function () {
+//             $('#smooth').change(function () {
                
-                if (child.geometry.isGeometry) {
-                    //Merged collada geometry
-                    smooth_geom = child.geometry;                   
-                }
-                else {
-                    smooth_geom = new THREE.Geometry().fromBufferGeometry(child.geometry);
-                }
+//                 if (child.geometry.isGeometry) {
+//                     //Merged collada geometry
+//                     smooth_geom = child.geometry;                   
+//                 }
+//                 else {
+//                     smooth_geom = new THREE.Geometry().fromBufferGeometry(child.geometry);
+//                 }
                 
-                if (smooth.checked) {
-                    document.getElementById('smooth-model').innerHTML = "Flatten Model";
+//                 if (smooth.checked) {
+//                     document.getElementById('smooth-model').innerHTML = "Flatten Model";
 
-                    smooth_geom.mergeVertices();
-                    smooth_geom.computeVertexNormals();
-                    smooth_geom.computeFaceNormals();
-                    child.geometry = new THREE.BufferGeometry().fromGeometry(smooth_geom);
-                    //console.log(child.geometry);
-                }
-                else {
-                    document.getElementById('smooth-model').innerHTML = "Smooth Model";
+//                     smooth_geom.mergeVertices();
+//                     smooth_geom.computeVertexNormals();
+//                     smooth_geom.computeFaceNormals();
+//                     child.geometry = new THREE.BufferGeometry().fromGeometry(smooth_geom);
+//                     //console.log(child.geometry);
+//                 }
+//                 else {
+//                     document.getElementById('smooth-model').innerHTML = "Smooth Model";
 
-                    smooth_geom.computeFlatVertexNormals();
-                    child.geometry = new THREE.BufferGeometry().fromGeometry(smooth_geom);
-                }
-            });
+//                     smooth_geom.computeFlatVertexNormals();
+//                     child.geometry = new THREE.BufferGeometry().fromGeometry(smooth_geom);
+//                 }
+//             });
 
-        }
+//         }
 
-    });
+//     });
 
-}
-    
-function setPhong(mod, originalMat) {
-
-    $('#phong_check').on('change', function () {
-
-       if (modelWithTextures || fbxLoaded || gltfLoaded) {
-            phong.checked ? mod.material = materials.phongMaterial : mod.material = originalMat;
-          }
-          else{
-              phong.checked ? mod.material = materials.phongMaterial : mod.material = materials.default_material;
-          }
-     });
-
+// }
+ 
+function getMaterial(model){
+    if (model.userData.material){
+        return model.userData.material
+    }
+    return materials.default_material
 }
 
-function setXray(mod, originalMat) {
 
-    $('#xray_check').on('change', function () {
-        
-       if (modelWithTextures || fbxLoaded || gltfLoaded) {
-          xray.checked ? mod.material = materials.xrayMaterial : mod.material = originalMat;
-        }
-        else{
-            xray.checked ? mod.material = materials.xrayMaterial : mod.material = materials.default_material;
-        }
-    });
+
+function setShadingAsNeeded(model){
+    materials.wireframeAndModel.visible = false;
+    // smooth_geom = new THREE.Geometry().fromBufferGeometry(model.children[0].geometry);
+    if (phong.checked){
+        model.children[0].material = materials.phongMaterial
+    }
+    else if (xray.checked){
+        model.children[0].material = materials.xrayMaterial
+    }
+    else if (model_wire.checked){
+        materials.wireframeAndModel.visible = true;
+        model.children[0].material  = getMaterial(model);
+    }
+    else if (wire.checked){
+        materials.wireframeAndModel.visible = false;
+        model.children[0].material = materials.wireframeMaterial;
+    }
+    // else if (smooth.checked){
+    //     // smooth_geom.mergeVertices();
+    //     // smooth_geom.computeVertexNormals();
+    //     // smooth_geom.computeFaceNormals();
+    //     model.children[0].geometry = new THREE.BufferGeometry().fromGeometry(smooth_geom);
+    // }
+    else{
+        // smooth_geom.computeFlatVertexNormals();
+        // model.children[0].geometry = new THREE.BufferGeometry().fromGeometry(smooth_geom);
+        model.children[0].material = getMaterial(model)
+    }
 }
 
 var bound_box;
@@ -295,12 +310,16 @@ function setPolarGrid(mod) {
     var radials = 16;
     var circles = 8;
     var divisions = 64;
+    if (polar_grid_helper == undefined){
+        polar_grid_helper = new THREE.PolarGridHelper(bbox.max.x * 4, radials, circles, divisions);
+    }
 
-    polar_grid_helper = new THREE.PolarGridHelper(bbox.max.x * 4, radials, circles, divisions);
     polar_grid_helper.position.y = bbox.min.y;
     polar_grid_helper.visible = false;
     mod.add(polar_grid_helper);
 }
+
+
 
 var polar_grid_helper;
 $('#polar_grid').change(function () {
@@ -320,11 +339,11 @@ function setGrid(mod) {
     /*NORMAL GRID HELPER*/
     if (gridHelper == undefined){
     gridHelper = new THREE.GridHelper(bbox2.max.x * 4, 40, 0xe6e600, 0x808080);
+    scene.add(gridHelper);
     }
     //Set size of grid to cover objects of all sizes based on the non visible box3() size.
     gridHelper.position.y = bbox2.min.y; //Set grid underneath loaded model object
     gridHelper.visible = false; //Grid visibility initially false, until grid checkbox is selected
-    scene.add(gridHelper);
 }
 
 var gridHelper;
@@ -337,19 +356,25 @@ $('#grid').change(function () {
     }
 });
 
-var axis_view;
-function setAxis(mod) {
+var axis_view = undefined;
+// function setAxis(mod) {
 
-    var bbox3 = new THREE.Box3().setFromObject(mod);
+//     var bbox3 = new THREE.Box3().setFromObject(mod);
 
-    /*AXIS HELPER*/
-    axis_view = new THREE.AxesHelper(bbox3.max.z * 10); //Set axis size based on the non visible box3() size.
-    axis_view.position.y = bbox3.min.y; //Set axis underneath loaded model object
-    axis_view.visible = false; //axis visibility initially false, until axis checkbox is selected
-    mod.add(axis_view);
-}
+//     /*AXIS HELPER*/
+//     if (axis_view){
+//         axis_view = new THREE.AxesHelper(bbox3.max.z * 10); //Set axis size based on the non visible box3() size.
+//     }
+//     axis_view.position.y = bbox3.min.y; //Set axis underneath loaded model object
+//     axis_view.visible = false; //axis visibility initially false, until axis checkbox is selected
+//     mod.add(axis_view);
+// }
 
 $('#axis').change(function () {
+    if (axis_view == undefined){
+            axis_view = new THREE.AxesHelper(5); //Set axis size based on the non visible box3() size.
+            scene.add(axis_view)
+        }
     if (axis.checked) {
         axis_view.visible = true;
     }
@@ -475,16 +500,21 @@ function fixRotation(mod) {
 
     });
 }
+$("#reset_rot").click(function () {
+    if (g_frame_handler){
+        setCamera(g_frame_handler.getRenderedModel())
+    }
+});
 
-function resetRotation(mod) {
-    $("#reset_rot").click(function () {
-        mod.rotation.set(0, 0, 0);
-        polar_grid_helper.rotation.set(0, 0, 0);
-        gridHelper.rotation.set(0, 0, 0);
-        axis_view.rotation.set(0, 0, 0);
-        $('input[name="rotate"]').prop('checked', false);
-    });
-}
+// function resetRotation(mod) {
+//     $("#reset_rot").click(function () {
+//         mod.rotation.set(0, 0, 0);
+//         polar_grid_helper.rotation.set(0, 0, 0);
+//         gridHelper.rotation.set(0, 0, 0);
+//         axis_view.rotation.set(0, 0, 0);
+//         $('input[name="rotate"]').prop('checked', false);
+//     });
+// }
 
 /*Animation Controls */
 //credit: https://raw.githubusercontent.com/mrdoob/three.js/dev/editor/js/Sidebar.Animation.js
