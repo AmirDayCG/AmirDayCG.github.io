@@ -51,24 +51,24 @@ $(document).ready(function () {
         var arrow = document.getElementById('collapse_side');
 
         if (side_collapsed) {
-            $('.side_menu').toggle('slide', 'left', 1200);
+            $('.side_menu').toggle('slide', 'left', 600);
             // move the left collapse arrow along with menu and set it to be a right arrow (bring back menu)
             $('#collapse_side').css('position', 'absolute').animate({
                 left: '-=270'
             }, {
-                duration: 1500,
+                duration: 700,
                 complete: function () {
                     arrow.innerHTML = "&rarr;";
                 }
             });
         }
         else {
-            $('.side_menu').toggle('slide', 'left', 1200);
+            $('.side_menu').toggle('slide', 'left', 600);
             // move the right collapse back along with menu
             $('#collapse_side').css('position', 'absolute').animate({
                 left: '+=270'
             }, {
-                duration: 1100,
+                duration: 500,
                 complete: function () {
                     arrow.innerHTML = "&larr;";
                 }

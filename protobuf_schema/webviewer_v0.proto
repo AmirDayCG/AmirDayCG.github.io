@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package webviewer;
+
+enum ModelType {
+  OBJ = 0;
+  FBX = 1;
+}
+
+message Model{
+    optional string model = 1;
+    optional ModelType model_type = 2;
+    repeated float model_translation = 3 [packed=true];
+    repeated float model_rotation = 4 [packed=true];
+    optional int32 model_id = 5;
+    optional int32 texture_width = 6;
+    optional int32 texture_height = 7;
+    repeated int32 faces = 8;
+    repeated int32 faces_to_uv = 9;
+    repeated int32 uvs = 10;
+}
+
+message ObjUpdate {
+    optional int32 model_id = 1;
+    repeated float vertices = 2 [packed=true];
+    // repeated int32 texture = 3 [packed=true];
+    optional bytes texture = 3;
+    repeated float model_translation = 4 [packed=true];
+    repeated float model_rotation = 5 [packed=true];
+}
+
+message FbxUpdate {
+    optional int32 model_id = 1;
+    repeated float blend_shapes = 2 [packed=true];
+    repeated float joints_rotations = 3 [packed=true];
+    repeated int32 texture = 4 [packed=true];
+    repeated float model_translation = 5 [packed=true];
+    repeated float model_rotation = 6 [packed=true];
+}
+
+message Frame{
+  repeated Model models = 1;
+  repeated FbxUpdate fbx_update = 2;
+  repeated ObjUpdate obj_update = 3;
+  optional int32 frame_id = 4;
+}

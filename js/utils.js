@@ -1,83 +1,30 @@
 
-function stats(modelName, geometry, numOfMeshes) {
+var amb = document.getElementById('ambient_light');
+var rot1 = document.getElementById('rotation');
+var wire = document.getElementById('wire_check');
+var model_wire = document.getElementById('model_wire');
+var phong = document.getElementById('phong_check');
+var xray = document.getElementById('xray_check');
+var glow = document.getElementById('glow_check');
+var grid = document.getElementById('grid');
+var polar_grid = document.getElementById('polar_grid');
+var axis = document.getElementById('axis');
+var bBox = document.getElementById('bBox');
 
-    if (geometry !== undefined) {
-        statsNode.innerHTML = 'Name of model/file: ' + '<span class="statsText">' + modelName + '</span>'
+var transform = document.getElementById('transform');
+var non_smooth = document.getElementById('non_smooth');
+var outline = document.getElementById('outline');
+
+var statsNode = document.getElementById('stats');
+var g_rotation_y = 0
+
+function stats(modelName, num_of_faces, numOfMeshes) {
+        statsNode.innerHTML = 'index: ' + '<span class="statsText">' + modelName + '</span>'
            + '<br>'
-           + 'Number of vertices: ' + '<span class="statsText">' + geometry.attributes.position.count + '</span>'
-           + '<br>'
-           + 'Number of faces: ' + '<span class="statsText">' + geometry.attributes.position.count / 3 + '</span>'
+           + 'Number of faces: ' + '<span class="statsText">' + num_of_faces + '</span>'
            + '<br>'
            + 'Number of Meshes: ' + '<span class="statsText">' + numOfMeshes + '</span>';
-    }
 
-}
-
-function colladaMerge(dae, filename) {
-
-    dae.traverse(function (child) {
-
-        if (child instanceof THREE.Mesh) {
-
-            numOfMeshes++;
-            var geometry = child.geometry;
-            stats(filename, geometry, numOfMeshes);
-
-           // console.log(child.geometry); // BufferGeometry
-
-            //child.geometry = new THREE.BufferGeometry().fromGeometry(child.geometry);
-            var wireframe2;
-            var collada_geometry = new THREE.Geometry();
-
-            if (dae.children.length > 1) {
-                for (var i = 0; i < dae.children.length; i++) {
-                    var col_child = dae.children[i];
-
-                    //console.log(dae.children.length);
-
-                    if (col_child instanceof THREE.Mesh) {
-                        
-                        //When there is more than one child BufferGeometry, create a new geometry 
-                        //and merge it with the main new geometry (defined above as collada_geometry)
-                        var geom = new THREE.Geometry().fromBufferGeometry(col_child.geometry);
-
-                        collada_geometry.merge(geom);
-                        console.log(collada_geometry);
-
-                         var buffer_collada_geometry = new THREE.BufferGeometry().fromGeometry(collada_geometry);
-                         console.log(buffer_collada_geometry);
-                    }
-                }
-
-                model = new THREE.Mesh(buffer_collada_geometry, materials.default_material);
-                wireframe2 = new THREE.WireframeGeometry(buffer_collada_geometry);
-                console.log("More than one Geometry");
-
-                setSmooth(model);   
-            }
-            else {
-               // var single_geom = new THREE.Geometry().fromBufferGeometry(child.geometry);
-
-                model = new THREE.Mesh(child.geometry, materials.default_material);
-                wireframe2 = new THREE.WireframeGeometry(child.geometry);
-                console.log("One Geometry");
-
-                setSmooth(model);
-            }
-
-            child.material = materials.default_material;
-
-            var edges = new THREE.LineSegments(wireframe2, materials.wireframeAndModel);
-            materials.wireframeAndModel.visible = false;
-            model.add(edges);
-
-            setWireFrame(model);
-            setWireframeAndModel(model);
-            setPhong(model);
-            setXray(model);
-        }
-
-    });
 }
 
 function setCamera(mod) {
@@ -92,157 +39,10 @@ function setCamera(mod) {
     camera.lookAt(pos);
 }
 
-// $('#glow_check').on('change', function () {
-
-//         if (glow.checked && g_current_model) {
-//             outlinePass.selectedObjects = [g_current_model];
-//             $('input.check').not(this).prop('checked', false);
-//             outlinePass.enabled = true;
-//         }
-//         else {
-//             outlinePass.enabled = false;
-//         }
-        
-// });
-
-// function setWireFrame(mod) {
-
-//     if (modelWithTextures || fbxLoaded || gltfLoaded) {
-
-//         $('#wire_check').on('change', function () {
-
-//                 $('input.check').not(this).prop('checked', false);
-
-//                 if (wire.checked) {
-
-//                     materials.wireframeAndModel.visible = false;
-//                      if (mod.material.length > 1) {
-//                          for (var i = 0; i < mod.material.length; i++) {
- 
-//                              mod.material[i].wireframe = true;
-//                          }
-//                      }
-//                      else {
-//                          mod.material.wireframe = true;
-//                      }
-
-//                 }
-//                 else {
-//                     if (mod.material.length > 1) {
-//                          for (var i = 0; i < mod.material.length; i++) {
- 
-//                              mod.material[i].wireframe = false;
-//                          }
-//                      }
-//                      else {
-//                         mod.material.wireframe = false;
-//                      }
-//                 }
-//             });
-      
-//         }
-//     else {
-
-//         $('#wire_check').on('change', function () {
-
-//             $('input.check').not(this).prop('checked', false);
-
-//             if (wire.checked) {
-//                 materials.wireframeAndModel.visible = false;
-//                 mod.material = materials.wireframeMaterial;
-//             }
-//             else {
-//                 mod.material = materials.default_material;
-//             }
-//         });
-//     }
-// }
-
-// function setWireframeAndModel(mod) {
-
-//     $('#model_wire').on('change', function () {
-
-//         $('input.check').not(this).prop('checked', false);
-
-//         if (modelWithTextures || fbxLoaded || gltfLoaded) {
-//             if (mod.material.length > 1) {
-//                 for (var i = 0; i < mod.material.length; i++) {
-
-//                     mod.material[i].wireframe = false;
-//                 }
-//             }
-//             else {
-//                 mod.material.wireframe = false;
-//             }
-
-//             if (model_wire.checked) {
-//                 materials.wireframeAndModel.visible = true;
-//             }
-//             else {
-//                 materials.wireframeAndModel.visible = false;
-//             }
-//         }
-//         //model without textures
-//         else {
-//             mod.material = materials.default_material;
-
-//             if (model_wire.checked) {
-//                 materials.wireframeAndModel.visible = true;
-//             }
-//             else {
-//                 materials.wireframeAndModel.visible = false;
-//                 mod.material = materials.default_material;
-//             }
-//         }
-       
-//     });
-
-// }
-
-// function setSmooth(mod) {
-
-//     var smooth_geom;
-
-//     mod.traverse(function (child) {
-
-//         if (child instanceof THREE.Mesh) {
-
-//             $('#smooth').change(function () {
-               
-//                 if (child.geometry.isGeometry) {
-//                     //Merged collada geometry
-//                     smooth_geom = child.geometry;                   
-//                 }
-//                 else {
-//                     smooth_geom = new THREE.Geometry().fromBufferGeometry(child.geometry);
-//                 }
-                
-//                 if (smooth.checked) {
-//                     document.getElementById('smooth-model').innerHTML = "Flatten Model";
-
-//                     smooth_geom.mergeVertices();
-//                     smooth_geom.computeVertexNormals();
-//                     smooth_geom.computeFaceNormals();
-//                     child.geometry = new THREE.BufferGeometry().fromGeometry(smooth_geom);
-//                     //console.log(child.geometry);
-//                 }
-//                 else {
-//                     document.getElementById('smooth-model').innerHTML = "Smooth Model";
-
-//                     smooth_geom.computeFlatVertexNormals();
-//                     child.geometry = new THREE.BufferGeometry().fromGeometry(smooth_geom);
-//                 }
-//             });
-
-//         }
-
-//     });
-
-// }
  
 function getMaterial(model){
-    if (model.userData.material){
-        return model.userData.material
+    if (model.children[0].userData.material){
+        return model.children[0].userData.material
     }
     return materials.default_material
 }
@@ -251,174 +51,35 @@ function getMaterial(model){
 
 function setShadingAsNeeded(model){
     materials.wireframeAndModel.visible = false;
+    model.children[0].material = getMaterial(model)
+    model.children[0].material.wireframe = false
+    model.children[0].material.flatShading = false
     // smooth_geom = new THREE.Geometry().fromBufferGeometry(model.children[0].geometry);
     if (phong.checked){
         model.children[0].material = materials.phongMaterial
+    }
+    else if (non_smooth.checked){
+        model.children[0].material.flatShading = true
     }
     else if (xray.checked){
         model.children[0].material = materials.xrayMaterial
     }
     else if (model_wire.checked){
-        materials.wireframeAndModel.visible = true;
-        model.children[0].material  = getMaterial(model);
+        model.children[0].material.wireframe = true
     }
     else if (wire.checked){
-        materials.wireframeAndModel.visible = false;
         model.children[0].material = materials.wireframeMaterial;
     }
-    // else if (smooth.checked){
-    //     // smooth_geom.mergeVertices();
-    //     // smooth_geom.computeVertexNormals();
-    //     // smooth_geom.computeFaceNormals();
-    //     model.children[0].geometry = new THREE.BufferGeometry().fromGeometry(smooth_geom);
-    // }
-    else{
-        // smooth_geom.computeFlatVertexNormals();
-        // model.children[0].geometry = new THREE.BufferGeometry().fromGeometry(smooth_geom);
-        model.children[0].material = getMaterial(model)
-    }
+    model.children[0].material.needsUpdate = true
 }
-
-var bound_box;
-function setBoundBox(mod) {
-    /*bound_box = new THREE.BoxHelper(mod); //, 0xffffff
-    bound_box.visible = false;
-    mod.add(bound_box); //Add bounding box helper to model (for when checkbox is checked)*/
-
-    var box = new THREE.Box3().setFromObject(mod);
-    bound_box = new THREE.Box3Helper(box);
-    bound_box.visible = false;
-    mod.add(bound_box);
-}
-
-$('#bBox').change(function () {
-    if (bBox.checked) {
-        bound_box.visible = true;
-    }
-    else {
-        bound_box.visible = false;
-    }
-});
-
-function setPolarGrid(mod) {
-
-    var bbox = new THREE.Box3().setFromObject(mod);
-    console.log(bbox.min.y);
-
-    /*POLAR GRID HELPER*/
-    var radius = 10;
-    var radials = 16;
-    var circles = 8;
-    var divisions = 64;
-    if (polar_grid_helper == undefined){
-        polar_grid_helper = new THREE.PolarGridHelper(bbox.max.x * 4, radials, circles, divisions);
-    }
-
-    polar_grid_helper.position.y = bbox.min.y;
-    polar_grid_helper.visible = false;
-    mod.add(polar_grid_helper);
-}
-
-
-
-var polar_grid_helper;
-$('#polar_grid').change(function () {
-    if (polar_grid.checked) {
-        polar_grid_helper.visible = true;
-    }
-    else {
-        polar_grid_helper.visible = false;
-    }
-});
-
-
-function setGrid(mod) {
-
-    var bbox2 = new THREE.Box3().setFromObject(mod);
-
-    /*NORMAL GRID HELPER*/
-    if (gridHelper == undefined){
-    gridHelper = new THREE.GridHelper(bbox2.max.x * 4, 40, 0xe6e600, 0x808080);
-    scene.add(gridHelper);
-    }
-    //Set size of grid to cover objects of all sizes based on the non visible box3() size.
-    gridHelper.position.y = bbox2.min.y; //Set grid underneath loaded model object
-    gridHelper.visible = false; //Grid visibility initially false, until grid checkbox is selected
-}
-
-var gridHelper;
-$('#grid').change(function () {
-    if (grid.checked) {
-        gridHelper.visible = true;
-    }
-    else {
-        gridHelper.visible = false;
-    }
-});
-
-var axis_view = undefined;
-// function setAxis(mod) {
-
-//     var bbox3 = new THREE.Box3().setFromObject(mod);
-
-//     /*AXIS HELPER*/
-//     if (axis_view){
-//         axis_view = new THREE.AxesHelper(bbox3.max.z * 10); //Set axis size based on the non visible box3() size.
-//     }
-//     axis_view.position.y = bbox3.min.y; //Set axis underneath loaded model object
-//     axis_view.visible = false; //axis visibility initially false, until axis checkbox is selected
-//     mod.add(axis_view);
-// }
-
-$('#axis').change(function () {
-    if (axis_view == undefined){
-            axis_view = new THREE.AxesHelper(5); //Set axis size based on the non visible box3() size.
-            scene.add(axis_view)
-        }
-    if (axis.checked) {
-        axis_view.visible = true;
-    }
-    else {
-        axis_view.visible = false;
-    }
-});
-
-//jQuery slider for phong shininess level
-$("#shine").slider({
-    orientation: "horizontal",
-    min: 10,
-    max: 500,
-    value: 10,
-    slide: function (event, ui) {
-        materials.phongMaterial.shininess = ui.value; //Set shininess parameter to the current selected value of slider
-    },
-    change: function (event, ui) {
-        console.log(ui.value);
-        materials.phongMaterial.shininess = ui.value; //Set shininess of phong material to value from the slider
-    }
-});
-
-//Strength of glow outine
-$("#edgeStrength").slider({
-    orientation: "horizontal",
-    min: 1,
-    max: 10,
-    value: 1,
-    slide: function (event, ui) {
-        outlinePass.edgeStrength = ui.value;
-    },
-    change: function (event, ui) {
-        outlinePass.edgeStrength = ui.value;
-    }
-});
 
 //PointLight intensity slider
 $("#point_light").slider({
     orientation: "horizontal",
     min: 0,
-    max: 1,
+    max: 4,
     step: 0.1,
-    value: 0.5,
+    value: 1.5,
     slide: function (event, ui) {
         pointLight.intensity = ui.value;
     },
@@ -468,53 +129,36 @@ function scaleDown(mod) {
         }
     });
 }
+var g_rotation_direction = +1
+var rotation_limit = 500
 
-function fixRotation(mod) {
-
-    $("input:radio[name=rotate]").click(function () {
-        var rotAxis = $("input:radio[name=rotate]:checked").val();
-
-        switch (rotAxis) {
-
-            case 'rotateX':
-                mod.rotation.x = -Math.PI / 2;
-                polar_grid_helper.rotation.x = Math.PI / 2;
-                gridHelper.rotation.x = Math.PI / 2;
-                axis_view.rotation.x = Math.PI / 2;
-                break;
-
-            case 'rotateY':
-                mod.rotation.y = -Math.PI / 2;
-                polar_grid_helper.rotation.y = Math.PI / 2;
-                gridHelper.rotation.y = Math.PI / 2;
-                axis_view.rotation.y = Math.PI / 2;
-                break;
-
-            case 'rotateZ':
-                mod.rotation.z = -Math.PI / 2;
-                polar_grid_helper.rotation.z = Math.PI / 2;
-                gridHelper.rotation.z = Math.PI / 2;
-                axis_view.rotation.z = Math.PI / 2;
-                break;
-        }
-
-    });
+$('#rotation_limit').change( ()=> {
+    g_rotation_y = 0
+    if (document.getElementById('rotation_limit').value == ''){
+        rotation_limit = 500
+        g_rotation_direction = +1
+    }
+    else{
+        rotation_limit = Math.PI /180 * parseFloat(document.getElementById('rotation_limit').value)
+    }
+})
+function rotateModel(model){
+    if (Math.abs(g_rotation_y) > rotation_limit) g_rotation_direction = -g_rotation_direction
+    if (rot1.checked){
+        g_rotation_y = g_rotation_y + g_rotation_direction*$('#rotation_speed').slider("value") / 255 / 10
+    }
+    model.rotation.set(model.rotation.x,
+                       g_rotation_y,
+                       model.rotation.z);
 }
+
+
 $("#reset_rot").click(function () {
     if (g_frame_handler){
-        setCamera(g_frame_handler.getRenderedModel())
+        g_rotation_y = 0
     }
 });
 
-// function resetRotation(mod) {
-//     $("#reset_rot").click(function () {
-//         mod.rotation.set(0, 0, 0);
-//         polar_grid_helper.rotation.set(0, 0, 0);
-//         gridHelper.rotation.set(0, 0, 0);
-//         axis_view.rotation.set(0, 0, 0);
-//         $('input[name="rotate"]').prop('checked', false);
-//     });
-// }
 
 /*Animation Controls */
 //credit: https://raw.githubusercontent.com/mrdoob/three.js/dev/editor/js/Sidebar.Animation.js
@@ -609,3 +253,68 @@ function stopAnimations() {
 
 document.getElementById("play").onclick = playAnimation;
 document.getElementById("stop").onclick = stopAnimations;
+
+function getAllUrlParams(url) {
+
+    // get query string from url (optional) or window
+    var queryString = url ? url.split('?')[1] : window.location.search.slice(1);
+  
+    // we'll store the parameters here
+    var obj = {};
+  
+    // if query string exists
+    if (queryString) {
+  
+      // stuff after # is not part of query string, so get rid of it
+      queryString = queryString.split('#')[0];
+  
+      // split our query string into its component parts
+      var arr = queryString.split('&');
+  
+      for (var i = 0; i < arr.length; i++) {
+        // separate the keys and the values
+        var a = arr[i].split('=');
+  
+        // set parameter name and value (use 'true' if empty)
+        var paramName = a[0];
+        var paramValue = typeof (a[1]) === 'undefined' ? true : a[1];
+  
+        // (optional) keep case consistent
+        paramName = paramName.toLowerCase();
+        if (typeof paramValue === 'string') paramValue = paramValue.toLowerCase();
+  
+        // if the paramName ends with square brackets, e.g. colors[] or colors[2]
+        if (paramName.match(/\[(\d+)?\]$/)) {
+  
+          // create key if it doesn't exist
+          var key = paramName.replace(/\[(\d+)?\]/, '');
+          if (!obj[key]) obj[key] = [];
+  
+          // if it's an indexed array e.g. colors[2]
+          if (paramName.match(/\[\d+\]$/)) {
+            // get the index value and add the entry at the appropriate position
+            var index = /\[(\d+)\]/.exec(paramName)[1];
+            obj[key][index] = paramValue;
+          } else {
+            // otherwise add the value to the end of the array
+            obj[key].push(paramValue);
+          }
+        } else {
+          // we're dealing with a string
+          if (!obj[paramName]) {
+            // if it doesn't exist, create property
+            obj[paramName] = paramValue;
+          } else if (obj[paramName] && typeof obj[paramName] === 'string'){
+            // if property does exist and it's a string, convert it to an array
+            obj[paramName] = [obj[paramName]];
+            obj[paramName].push(paramValue);
+          } else {
+            // otherwise add the property
+            obj[paramName].push(paramValue);
+          }
+        }
+      }
+    }
+  
+    return obj;
+  }

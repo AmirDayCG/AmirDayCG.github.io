@@ -1,60 +1,30 @@
+g_network = undefined
 g_play = false
+g_video_is_playing = false
+g_delta = 0
+g_frame_time_target = 1/15
  window.addEventListener('keydown', function (event) {
     if (event.key == " "){
         g_play = !g_play
     }
  })
- var frame_time_counter = 0
 
-g_model_is_loaded = false
-var container = document.getElementById('container');
 var view = document.getElementById('main_viewer');
-
 if (!Detector.webgl) Detector.addGetWebGLMessage();
+var camera, scene, renderer, stats, controls;
 
-var camera, camerHelper, scene, renderer, loader,
-    stats, controls, transformControls, numOfMeshes = 0, model, modelDuplicate, sample_model, wireframe, mat, scale, delta;
-
-// const manager = new THREE.LoadingManager();
-
-g_current_model = undefined
-
-var modelLoaded = false, sample_model_loaded = false;
-var modelWithTextures = false, fbxLoaded = false, gltfLoaded = false;;
-var bg_Texture = false;
-
-var glow_value, selectedObject, composer, effectFXAA, position, outlinePass, ssaaRenderPass;
 var clock = new THREE.Clock();
+three_stats = new Stats();
+three_stats.dom.id = 'three_stats'
+document.body.appendChild( three_stats.dom );
 
-var ambient, pointLight, bg_colour;
-var backgroundScene, backgroundCamera, backgroundMesh;
-
-var amb = document.getElementById('ambient_light');
-var rot1 = document.getElementById('rotation');
-var wire = document.getElementById('wire_check');
-var model_wire = document.getElementById('model_wire');
-var phong = document.getElementById('phong_check');
-var xray = document.getElementById('xray_check');
-var glow = document.getElementById('glow_check');
-var grid = document.getElementById('grid');
-var polar_grid = document.getElementById('polar_grid');
-var axis = document.getElementById('axis');
-var bBox = document.getElementById('bBox');
-
-var transform = document.getElementById('transform');
-var smooth = document.getElementById('smooth');
-var outline = document.getElementById('outline');
-
-var statsNode = document.getElementById('stats');
-
-//ANIMATION GLOBALS
-var animations = {}, animationsSelect = document.getElementById("animationSelect"),
-animsDiv = document.getElementById("anims"), mixer, currentAnimation, actions = {};
+var ambient, pointLight;
 
 //X-RAY SHADER MATERIAL
 //http://free-tutorials.org/shader-x-ray-effect-with-three-js/
 var materials = {
-    default_material: new THREE.MeshLambertMaterial({ side: THREE.DoubleSide }),
+    default_material: new THREE.MeshPhongMaterial({ side: THREE.DoubleSide, shininess: 0}),
+    default_material_flat: new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, flatShading: true}),
     default_material2: new THREE.MeshLambertMaterial({ side: THREE.DoubleSide }),
     wireframeMaterial: new THREE.MeshPhongMaterial({
         side: THREE.DoubleSide,
@@ -63,11 +33,11 @@ var materials = {
         specular: 0x000, emissive: 0x000,
         flatShading: false, depthWrite: true, depthTest: true
     }),
-    wireframeMaterial2: new THREE.LineBasicMaterial({ wireframe: true, color: 0xffffff }),
+    // wireframeMaterial2: new THREE.LineBasicMaterial({ wireframe: true, color: 0xffffff }),
     wireframeAndModel: new THREE.LineBasicMaterial({ color: 0xffffff }),
     phongMaterial: new THREE.MeshPhongMaterial({
         color: 0x555555, specular: 0xffffff, shininess: 10,
-        flatShading: false, side: THREE.DoubleSide, skinning: true
+        flatShading: false, side: THREE.DoubleSide, flatShading: true
     }),
     xrayMaterial: new THREE.ShaderMaterial({
         uniforms: {
@@ -81,19 +51,12 @@ var materials = {
     })
 };
 
-var clock = new THREE.Clock();
-var winDims = [window.innerWidth * 0.8, window.innerHeight * 0.89]; //size of renderer
 
-// function onload() {
-
-//     //window.addEventListener('resize', onWindowResize, false);
-//     switchScene(0);
-//     animate();
-// }
-
-function initScene(index) {
+function initScene() {
 
     scene = new THREE.Scene();
+    scene_objects = new THREE.Group();
+    scene.add(scene_objects)
 
     camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 500000);
     camera.position.set(0, 0, 20);
@@ -109,104 +72,81 @@ function initScene(index) {
 
     THREEx.WindowResize(renderer, camera);
 
-    // function toggleFullscreen(elem) {
-    //     elem = elem || document.documentElement;
-    //     if (!document.fullscreenElement && !document.mozFullScreenElement &&
-    //         !document.webkitFullscreenElement && !document.msFullscreenElement) {
-
-    //         THREEx.FullScreen.request(container);
-
-    //     }
-    //     else {
-    //         if (document.exitFullscreen) {
-    //             document.exitFullscreen();
-    //         } else if (document.msExitFullscreen) {
-    //             document.msExitFullscreen();
-    //             //renderer.setSize(winDims[0], winDims[1]); //Reset renderer size on fullscreen exit
-    //         } else if (document.mozCancelFullScreen) {
-    //             document.mozCancelFullScreen();
-    //             //renderer.setSize(winDims[0], winDims[1]);
-    //         } else if (document.webkitExitFullscreen) {
-    //             document.webkitExitFullscreen();
-    //            // renderer.setSize(winDims[0], winDims[1]);
-    //         }
-    //     }
-    // }
-
-    // document.getElementById('fullscreenBtn').addEventListener('click', function () {
-    //     toggleFullscreen();
-    // });
-  
     
-    ambient = new THREE.AmbientLight(0x404040, 1.0);
+    ambient = new THREE.AmbientLight(0xffffff, 2.0);
+    scene_objects.add(ambient)
+    ambient.visible = false
+    amb.checked = false
     $('#ambient_light').change(function () {
         if (amb.checked) {
-            scene.add(ambient);
+            ambient.visible = true
         }
         else {
-            scene.remove(ambient);
+            ambient.visible = false
         }
     });
 
-    if (amb.checked) {
-        scene.add(ambient);
-    }
 
     /*LIGHTS*/
 
-    pointLight = new THREE.PointLight(0xffffff, 0.5);
+    pointLight = new THREE.PointLight(0xffffff, 1.5);
     pointLight.position.set(0, 0, 500)
     pointLight.lookAt(0,0,0)
     camera.add(pointLight);
 
-    scene.add(camera);
+    scene_objects.add(camera);
     
-//     const axesHelper = new THREE.AxesHelper( 5 );
-//     // axesHelper.setColors(0xff0000, 0x00ff00, 0x0000ff ) 
-    
-// scene.add( axesHelper );
-
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.09;
-    controls.rotateSpeed = 0.09;
+    controls.rotateSpeed = 0.49;
     controls.keys = {
         LEFT: 'a', //left arrow
         UP: 'w', // up arrow
         RIGHT: 'd', // right arrow
         BOTTOM: 's' // down arrow
     }
-    // controls.reset()
+    
+    gridHelper = new THREE.GridHelper(10, 40, 0xe6e600, 0x808080);
+    gridHelper.position.set(0,-0.5,0)
+    gridHelper.visible = false;
+    $('#grid').change(function () {
+        if (grid.checked) {
+            gridHelper.visible = true;
+        }
+        else {
+            gridHelper.visible = false;
+        }
+    });
+    scene_objects.add(gridHelper)
 
-    // transformControls = new THREE.TransformControls(camera, renderer.domElement);
-    // transformControls.addEventListener('change', render);
-    // scene.add(transformControls);
 
-    // transformControls.addEventListener('mouseDown', function () {
-    //     controls.enabled = false;
-    // });
-    // transformControls.addEventListener('mouseUp', function () {
-    //     controls.enabled = true;
-    // });
+    polar_grid_helper = new THREE.PolarGridHelper(5, 16, 8, 64);
+    polar_grid_helper.visible = false;
+    polar_grid_helper.position.set(0,-0.5,0)
+    scene_objects.add(polar_grid_helper)
+    $('#polar_grid').change(function () {
+        if (polar_grid.checked) {
+            polar_grid_helper.visible = true;
+        }
+        else {
+            polar_grid_helper.visible = false;
+        }
+    });
 
-    // window.addEventListener('keydown', function (event) {
+    axis_view = new THREE.AxesHelper(5); //Set axis size based on the non visible box3() size.
+    axis_view.visible = false;
+    scene_objects.add(axis_view)
 
-    //     switch (event.keyCode) {
+    $('#axis').change(function () {
+        if (axis.checked) {
+            axis_view.visible = true;
+        }
+        else {
+            axis_view.visible = false;
+        }
+    });
 
-    //         case 82: // R key pressed - set rotate mode
-    //             transformControls.setMode("rotate");
-    //             break;
-
-    //         case 84: // T key pressed - set translate mode
-    //             transformControls.setMode("translate");
-    //             break;
-
-    //         case 83: // S key pressed - set scale mode
-    //             transformControls.setMode("scale");
-    //             break;
-    //     }
-
-    // });
 
     //Colour changer, to set background colour of renderer to user chosen colour
     $(".bg_select").spectrum({
@@ -215,171 +155,22 @@ function initScene(index) {
             $("#basic_log").text("Hex Colour Selected: " + color.toHexString()); //Log information
             var bg_value = $(".bg_select").spectrum('get').toHexString(); //Get the colour selected
             renderer.setClearColor(bg_value); //Set renderer colour to the selected hex value
-            // ssaaRenderPass.clearColor = bg_value;
             document.body.style.background = bg_value; //Set body of document to selected colour           
         }
     });
 
-    // postprocessing    
-    // var renderPass = new THREE.RenderPass( scene, camera );
+    var g_demo_files = []
+    for (var i=5538; i<5620; i++){
+        g_demo_files.push({'name': 'sample_models/' + String(i).padStart(6, '0') + '.obj'})
+        g_demo_files.push({'name': 'sample_models/' + String(i).padStart(6, '0') + '.png'})
+    }
 
-    // var fxaaPass = new THREE.ShaderPass( THREE.FXAAShader );
-    // var pixelRatio = renderer.getPixelRatio();
+    updateFrameHandlerAndSliderLocal(g_demo_files)
 
-    // fxaaPass.material.uniforms[ 'resolution' ].value.x = 1 / ( window.innerWidth * pixelRatio );
-    // fxaaPass.material.uniforms[ 'resolution' ].value.y = 1 / ( window.innerHeight * pixelRatio );
-    // fxaaPass.renderToScreen = true;
-
-    // outlinePass = new THREE.OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);   
-    // outlinePass.edgeStrength = 1.5; 
-    // outlinePass.edgeGlow = 2;
-
-    // composer = new THREE.EffectComposer( renderer );
-    // composer.addPass( renderPass );
-    // composer.addPass(outlinePass);
-    // composer.addPass( fxaaPass );
-    
-//     /*LOAD SAMPLE MODELS*/
-//     var sceneInfo = modelList[index]; //index from array of sample models in html select options
-//     loader = new THREE.OBJLoader(manager);
-//     var url = sceneInfo.url;
-
-//     //progress/loading bar
-//     var onProgress = function (data) {
-//         if (data.lengthComputable) { //if size of file transfer is known
-//             var percentage = Math.round((data.loaded * 100) / data.total);
-//             console.log(percentage);
-//             statsNode.innerHTML = 'Loaded : ' + percentage + '%' + ' of ' + sceneInfo.name
-//             + '<br>'
-//             + '<progress value="0" max="100" class="progress"></progress>';
-//             $('.progress').css({ 'width': percentage + '%' });
-//             $('.progress').val(percentage);
-//         }
-//     }
-//     var onError = function (xhr) {
-//         console.log('ERROR');
-//     };
-
-//     loader.load(url, function (data) {
-
-//         sample_model = data;
-//         sample_model_loaded = true;
-
-//         console.log(sample_model);
-
-//         sample_model.traverse(function (child) {
-//             if (child instanceof THREE.Mesh) {
-
-//                 numOfMeshes++;
-//                 var geometry = child.geometry;
-//                 stats(sceneInfo.name, geometry, numOfMeshes);
-                
-//                 child.material = materials.default_material;
-
-//                 var wireframe2 = new THREE.WireframeGeometry(child.geometry);
-//                 var edges = new THREE.LineSegments(wireframe2, materials.wireframeAndModel);
-//                 materials.wireframeAndModel.visible = false;
-//                 sample_model.add(edges);
-
-//                 setWireFrame(child);
-//                 setWireframeAndModel(child);
-
-//                 setPhong(child);
-//                 setXray(child);
-
-//             }
-//         });
-
-//         setCamera(sample_model);
-
-//         setSmooth(sample_model);
-
-//         setBoundBox(sample_model);
-//         setPolarGrid(sample_model);
-//         setGrid(sample_model);
-//         setAxis(sample_model);
-
-//         scaleUp(sample_model);
-//         scaleDown(sample_model);
-
-//         selectedObject = sample_model;
-//         outlinePass.selectedObjects = [selectedObject];
-//         outlinePass.enabled = false;
-
-//         scene.add(sample_model);
-
-//     }, onProgress, onError);
-
-
-//     $('#transform').on('change', function () {
-        
-//         if (transform.checked) {
-//             document.getElementById('transformKey').style.display = 'block';
-//             if (modelLoaded) {
-//                 transformControls.attach(model);
-//             }
-//             else if(sample_model_loaded) {
-//                 transformControls.attach(sample_model);
-//             }
-            
-//         } else {
-//             document.getElementById('transformKey').style.display = 'none';
-//             transformControls.detach(scene);
-//         }
-//     });
-// }
-
-// function removeModel() {
-
-//     scene.remove(model);
-//     scale = 1;
-//     numOfMeshes = 0;
-//     modelLoaded = false;
-//     modelWithTextures = false;
-//     fbxLoaded = false;
-//     gltfLoaded = false;
-    
-//     if (ambient) {
-//         scene.remove(ambient);
-//     }
-    
-//     $('#point_light').slider("value", 0.0);
-//     pointLight.intensity = 0.5;
-
-//     camera.position.set(0, 0, 20); //Reset camera to initial position
-//     controls.reset(); //Reset controls, for when previous object has been moved around e.g. larger object = larger rotation
-//     statsNode.innerHTML = ''; //Reset stats box (faces, vertices etc)
-
-//     $("#red, #green, #blue, #ambient_red, #ambient_green, #ambient_blue").slider("value", 127); //Reset colour sliders
-
-//     amb.checked = false; rot1.checked = false; wire.checked = false;
-//     model_wire.checked = false; phong.checked = false; xray.checked = false;
-//     glow.checked = false; grid.checked = false; polar_grid.checked = false;
-//     axis.checked = false; bBox.checked = false; smooth.checked = false; 
-//     transform.checked = false, smooth.disabled = false; //Uncheck any checked boxes
-    
-//     transformControls.detach(scene);
-
-//     document.getElementById('smooth-model').innerHTML = "Smooth Model";
-
-//     $('#rot_slider').slider({
-//         disabled: true //disable the rotation slider
-//     });
-//     controls.autoRotate = false; //Stop model auto rotating if doing so on new file select
-//     $('#shine').slider("value", 10); //Set phong shine level back to initial
-
-//     $('input[name="rotate"]').prop('checked', false); //uncheck rotate x, y or z checkboxes
-    
-//     animsDiv.style.display = "none"; //Hide animation <div>
 }
-
-// $('#remove').click(function () {
-//     removeModel();
-// });
 
 $("#red, #green, #blue, #ambient_red, #ambient_green, #ambient_blue").slider({
     change: function (event, ui) {
-        console.log(ui.value);
         render();
     }
 });
@@ -397,29 +188,6 @@ $("#rot_slider").slider({
         rotation_speed = rotVal[ui.value]; //Set speed variable to the current selected value of slider
     }
 });
-
-// $('#rotation').change(function () {
-//     if (rot1.checked) {
-//         rotation_speed = rotVal[$("#rot_slider").slider("value")];
-//         //set the speed to the current slider value on initial use
-//         controls.autoRotate = true;
-
-//         $("#rot_slider").slider({
-//             disabled: false,
-//             change: function (event, ui) {
-//                 console.log(rotVal[ui.value]);
-//                 controls.autoRotate = true;
-//                 controls.autoRotateSpeed = delta * rotation_speed;
-//             }
-//         });
-//     }
-//     else {
-//         controls.autoRotate = false;
-//         $('#rot_slider').slider({
-//             disabled: true //disable the slider from being able to rotate object when rotation toggle is off
-//         });
-//     }
-// });
 
 function setColours() {
     if (ambient == undefined) return
@@ -442,117 +210,138 @@ function render() {
 }
 
 function animate() {
-    var frame_time_target = 1/15
-    delta = clock.getDelta();
-    frame_time_counter+= delta
+    g_delta = clock.getDelta();
     if (g_frame_handler != undefined){
-        var current_index = parseInt(document.getElementById("frames_slider").value)
-        if (g_play && current_index == g_frame_handler.rendered_index && frame_time_counter > frame_time_target){
-            // setTimeout( function() {
-                var val = parseInt(document.getElementById("frames_slider").value)
-                var max = parseInt(document.getElementById("frames_slider").max)
-                document.getElementById("frames_slider").value = String((val+1)%max)
-                frame_time_counter = frame_time_counter % frame_time_target
-            // }, 1000/15)
-        }
-        var current_index = parseInt(document.getElementById("frames_slider").value)
-        g_frame_handler.loadMultipleIndices(current_index, current_index+10)        
-        if(g_frame_handler.frames_buffer.isAvailable(current_index)){
-            g_frame_handler.showIndex(current_index)
-        }
-        if (g_frame_handler.getRenderedModel()){
+        g_frame_handler.animate()
+        g_frame_handler.updateStats()
+        if (g_frame_handler.getRenderedModel() != undefined && g_frame_handler.getRenderedModel().children.length > 0){
             setShadingAsNeeded(g_frame_handler.getRenderedModel())
-            stats(g_frame_handler.frames_buffer.getPath(current_index).obj, g_frame_handler.getRenderedModel().children[0].geometry, 1)
+            rotateModel(g_frame_handler.getRenderedModel())
         }
-        if (mixer) {
-            mixer.update(delta);
-        }
-        controls.update(delta);
-        // composer.render();
+        controls.update();
     }
-    requestAnimationFrame(animate);
-    
-
-    
+    requestAnimationFrame(animate);    
     render();
 
 }
 
-// function animate() {
-//     if (g_play & g_model_is_loaded){
-//         g_model_is_loaded = false
-//         setTimeout( function() {
-//             var val = parseInt(document.getElementById("frames_slider").value)
-//             var max = parseInt(document.getElementById("frames_slider").max)
-//             fixModel(model_list[val])
-//             document.getElementById("frames_slider").value = String((val+1)%max)
-//         }, 1000/15)
-//     }
-//     delta = clock.getDelta();
-//     requestAnimationFrame(animate);
-    
-//     if (mixer) {
-//         mixer.update(delta);
-//     }
-//     controls.update(delta);
-    
-//     composer.render();
-//     render();
 
-// }
-// var modelList = [
-//             {
-//                 name: "crash.obj", url: 'sample_models/crash2.obj'
-//             },
-//             {
-//                 name: "bear.obj", url: 'sample_models/bear-obj.obj'
-//             },
-//             {
-//                 name: "car.obj", url: 'sample_models/car2.obj'
-//                 //, objectRotation: new THREE.Euler(0, 3 * Math.PI / 2, 0)
-                        
-//             },
-//             {
-//                 name: "tiger.obj", url: 'sample_models/Tiger.obj'
-//             },
-//             {
-//                 name: "dinosaur.obj", url: 'sample_models/Dinosaur_V02.obj'
-//             },
-//             {
-//                 name: "skeleton.obj", url: 'sample_models/skeleton.obj'
-//             }
-// ];
+$(document).ready(function() {
+    $('#three_stats').draggable()
+    // three_stats.dom.style.position = 'relative';
+    // three_stats.dom.style.float = 'left';
+    $("#video_container").draggable().resizable();
+    $("#texture_container").draggable().resizable();
+    $("#stats").draggable().resizable();
+    // $("#texture_container").draggable();
+    var video = document.getElementById("video_player")
 
-// function switchScene(index) {
+    video.addEventListener('play', (event) => {
+        g_video_is_playing = true
+      });
+    video.addEventListener('pause', (event) => {
+        g_video_is_playing = false
+      });
+ });
 
-//     clear();
-//     initScene(index);
-//     var elt = document.getElementById('scenes_list');
-//     elt.selectedIndex = index;
 
-// }
 
-// function selectModel() {
 
-//     var select = document.getElementById("scenes_list");
-//     var index = select.selectedIndex;
+document.getElementById("play_button").addEventListener('click', () =>{
+    g_play = !g_play
+})
 
-//     if (index >= 0) {
-//         removeModel();     
-//         switchScene(index);
-//     }
+function removeNan(array) {
+    return array.filter(function (value) {
+        return !Number.isNaN(value);
+});
+}
 
-// }
+$('#show_video').change(function () {
+    if ($('#show_video')[0].checked) {
+        $("#video_container")[0].style.display = "block"
+    }
+    else {
+        $("#video_container")[0].style.display = "none"
+    }
+});
 
-// function clear() {
+$("#texture_view")[0].style.display = "none"
+$('#show_texture').change(function () {
+    if ($('#show_texture')[0].checked) {
+        $("#texture_view")[0].style.display = "block"
+        document.getElementById('texture_container').style.width = '512px'
+        document.getElementById('texture_container').style.height = '512px'
+        fixtextureImageSizeAfterResize()
 
-//     if (view && renderer) {
-//         view.removeChild(renderer.domElement);
-//         document.body.style.background = "#292121";
-//     }
-// }
+    }
+    else {
+        $("#texture_view")[0].style.display = "none"
+    }
+});
 
-// onload();
 
+$('#draw_uvs_on_texture').change(function () {
+    g_frame_handler.clearUVImage(document.getElementById("uv_image"))
+    g_frame_handler.updateUV()
+})
+function fixtextureImageSizeAfterResize(){
+    document.getElementById('uv_image').width = parseInt(document.getElementById('texture_container').style.width)
+    document.getElementById('texture_canvas').width = parseInt(document.getElementById('texture_container').style.width)
+    document.getElementById('texture_image').style.width = document.getElementById('texture_container').style.width
+    document.getElementById('uv_image').height = parseInt(document.getElementById('texture_container').style.height)
+    document.getElementById('texture_canvas').height = parseInt(document.getElementById('texture_container').style.height)
+    document.getElementById('texture_image').style.height = document.getElementById('texture_container').style.height
+}
+$('#texture_container').elementResize(function(event) {
+    fixtextureImageSizeAfterResize()
+    g_frame_handler.updateUV()
+ });
+
+function showVideoTimeStamp(time_stamp){
+    var video = document.getElementById("video_player")
+    var ct = Math.round((video.currentTime + Number.EPSILON) * 1000) / 1000
+    time_stamp = Math.round((time_stamp + Number.EPSILON) * 1000) / 1000
+    if (ct == time_stamp) return
+    // console.log(time_stamp)
+    setTimeout(() =>{
+    video.currentTime = time_stamp}, 0)
+
+}
+
+document.getElementById("container").addEventListener("drop", dropHandler);
+document.getElementById("container").addEventListener("dragover", (event)=>{event.preventDefault()});
+
+function dropHandler(event) {
+    console.log('File(s) dropped');
+    console.log(event.dataTransfer.files);
+    updateFrameHandlerAndSlider(event.dataTransfer.files)
+    // Prevent default behavior (Prevent file from being opened)
+    event.preventDefault();
+
+
+}
+
+function updateVideo(file){
+    $('#show_video')[0].checked = true
+    var video = document.getElementById("video_player")
+    var fileURL = URL.createObjectURL(file);
+    video.src = fileURL;
+}
+
+function parseQuery(queryString) {
+    var query = {};
+    var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
+    for (var i = 0; i < pairs.length; i++) {
+        var pair = pairs[i].split('=');
+        query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+    }
+    return query;
+}
+var query_params = getAllUrlParams(window.location.href)
+if ('ip' in query_params){
+    var network = NetworkClient(query_params.ip, parseInt(query_params.port))
+}
 initScene()
 animate();
+
