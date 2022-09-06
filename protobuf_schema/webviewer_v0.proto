@@ -23,7 +23,6 @@ message Model{
 message ObjUpdate {
     optional int32 model_id = 1;
     repeated float vertices = 2 [packed=true];
-    // repeated int32 texture = 3 [packed=true];
     optional bytes texture = 3;
     repeated float model_translation = 4 [packed=true];
     repeated float model_rotation = 5 [packed=true];
@@ -38,9 +37,16 @@ message FbxUpdate {
     repeated float model_rotation = 6 [packed=true];
 }
 
+message Image {
+    optional bytes image_data = 1;
+    optional int32 image_width = 2;
+    optional int32 image_height = 3;
+}
+
 message Frame{
   repeated Model models = 1;
   repeated FbxUpdate fbx_update = 2;
   repeated ObjUpdate obj_update = 3;
   optional int32 frame_id = 4;
+  repeated Image images = 5;
 }

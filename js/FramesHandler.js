@@ -18,6 +18,9 @@ var updateFrameHandlerAndSlider = function(files){
     document.getElementById("frames_slider").value = '1'
 }
 
+var clearTextureView = function(){
+    document.getElementById('texture_view').innerHTML = ''
+}
 var updateFrameHandlerAndSliderLocal = function(files){
     clearFramesData()
     g_frame_handler = new FramesHandler()
@@ -34,7 +37,10 @@ var clearSceneFromModels = function(){
     }
 }
 var clearTextureImage = function(){
-    document.getElementById('texture_image').src = ''
+    var txt = document.getElementsByName('texture_image')
+    for (var t=0; t<txt.length; t++){
+        txt[t].src = ''
+    }
 }
 
 var clearVideo = function(){
@@ -205,6 +211,8 @@ class FramesHandler{
         this.rendered_index = undefined
         this.frame_time_counter = 0
         this.buffer_depth = 0
+        clearTextureView()
+        addTextureImage('0')
     }
     initFromFilesListFromUser(frames_path_list){
         this.frames_buffer.initFromFilesListFromUser(frames_path_list)
@@ -228,6 +236,9 @@ class FramesHandler{
         if (this.rendered_index == undefined) return undefined
         return this.frames_buffer.getModel(this.rendered_index)
     }
+    reShow(){
+        this.showIndex(this.rendered_index)
+    }
     showIndex(index){
         if (index == undefined || index == this.rendered_index) return
         if (this.rendered_index != undefined){
@@ -236,21 +247,27 @@ class FramesHandler{
         this.rendered_index = index
         var model = this.frames_buffer.getModel(index)
         scene.add(model);
-        document.getElementById('texture_image').src = model.children[0].userData.material.map.source.data.src
+        if (document.getElementsByName('texture_image').length > 0){
+        document.getElementsByName('texture_image')[0].src = model.children[0].userData.material.map.source.data.src
+        }
         three_stats.update()
     }
     updateUV(){
         var model = this.getRenderedModel()
         if(document.getElementById('show_texture').checked &
         document.getElementById('draw_uvs_on_texture').checked){
-            var faces = model.children[0].geometry.index.array
-            var uvs = model.children[0].geometry.attributes.uv.array 
-            this.updateUVmapVizualizationOnTextureImage(faces, uvs, document.getElementById("uv_image"))
+            for (var m=0; m<model.children.length; m++) {
+                var faces = model.children[m].geometry.index.array
+                var uvs = model.children[m].geometry.attributes.uv.array 
+                this.updateUVmapVizualizationOnTextureImage(faces, uvs, document.getElementById('texture_container_'+String(0)).getElementsByName("uv_image")[0])
+            }
         }
     }
     clearUVImage(image){
-        var ctx = image.getContext("2d")
-        ctx.clearRect(0, 0, image.width, image.height)
+        for (var i=0; i<image.length; i++){
+            var ctx = image[i].getContext("2d")
+            ctx.clearRect(0, 0, image[i].width, image[i].height)
+        }
     }
     updateUVmapVizualizationOnTextureImage(faces, uvs, image){
         this.clearUVImage(image)
@@ -311,6 +328,7 @@ class FramesHandlerLive{
         this.models_group = new THREE.Group()
         this.models_group.name = 'model'
         this.frames_counter = 0
+        this.last_message = undefined
     }
     getRenderedModel(){
         return this.models_group
@@ -338,6 +356,8 @@ class FramesHandlerLive{
                 obj.obj.rotation.set(rotation[0], rotation[1], rotation[2])
             }
             scope.models[id] = obj
+            clearTextureView()
+            scope.createTextureContainers()
             // every loaded object remove and re-add the models
             scene.remove(scope.models_group)
             scope.models_group = new THREE.Group()
@@ -347,26 +367,35 @@ class FramesHandlerLive{
             scene.add(scope.models_group)
         })
     }
-
+    reShow(){
+        this.handleMessage(this.last_message)
+    }
     updateObjModel(id, vertices, texture){
         if (this.models[id] != undefined){
             this.models[id].UpdateOrCreate(vertices, texture)
             if (texture != undefined){
-                var ctx = document.getElementById('texture_canvas_hidden').getContext("2d");
-                document.getElementById('texture_canvas_hidden').width = this.models[id].texture_width
-                document.getElementById('texture_canvas_hidden').height = this.models[id].texture_height
+                var texture_container = document.getElementById('texture_container_' + String(id))
+                var ctx = texture_container.getElementsByName('texture_canvas_hidden')[0].getContext("2d");
+                texture_container.getElementsByName('texture_canvas_hidden')[0].width = this.models[id].texture_width
+                texture_container.getElementsByName('texture_canvas_hidden')[0].height = this.models[id].texture_height
                 var dataImage = ctx.createImageData(this.models[id].texture_width, this.models[id].texture_height);
                 dataImage.data.set(texture);
                 ctx.putImageData(dataImage, 0, 0);
-                var ctx_viz = document.getElementById('texture_canvas').getContext("2d");
-                ctx_viz.drawImage(document.getElementById('texture_canvas_hidden'), 0, 0, this.models[id].texture_width, this.models[id].texture_height,
+                var ctx_viz = texture_container.getElementsByName('texture_canvas')[0].getContext("2d");
+                ctx_viz.drawImage(texture_container.getElementsByName('texture_canvas_hidden')[0], 0, 0, this.models[id].texture_width, this.models[id].texture_height,
                  0,0,
-                 document.getElementById('texture_canvas').width,
-                 document.getElementById('texture_canvas').height);
+                 texture_container.getElementsByName('texture_canvas')[0].width,
+                 texture_container.getElementsByName('texture_canvas')[0].height);
             }
         }
     }
+    createTextureContainers(){
+        for (const [key, value] of Object.entries(this.models)) {
+            addTextureImage(String(key))
+        } 
+    }
     handleMessage(message){
+        this.last_message = message
         three_stats.update()
         if (message == undefined) return
         if (message.models != undefined){
@@ -385,6 +414,41 @@ class FramesHandlerLive{
                 this.updateObjModel(obj_update.modelId, obj_update.vertices, obj_update.texture)
             }
         }
+        if (message.images != undefined &&  $('#show_video')[0].checked ){
+            this.createOrRemoveImagesAccordingToMessage(message)
+            for (var i=0; i<message.images.length; i++){
+                var image_data = message.images[i].imageData
+                var image_width = message.images[i].imageWidth
+                var image_height = message.images[i].imageHeight
+                this.updateImage(i, image_data, image_width, image_height)
+            }
+        }
+    }
+
+    updateImage(id, image_data, image_width, image_height){
+        var image_container = document.getElementById('image_container_' + String(id))
+        var ctx = image_container.getElementsByName('image_canvas_hidden')[0].getContext("2d");
+        image_container.getElementsByName('image_canvas_hidden')[0].width = image_width
+        image_container.getElementsByName('image_canvas_hidden')[0].height = image_height
+        var dataImage = ctx.createImageData(image_width, image_height);
+        dataImage.data.set(image_data);
+        ctx.putImageData(dataImage, 0, 0);
+        var ctx_viz = image_container.getElementsByName('image_canvas')[0].getContext("2d");
+        ctx_viz.drawImage(image_container.getElementsByName('image_canvas_hidden')[0], 0, 0, 
+        image_width, image_height,0,0,
+        image_container.getElementsByName('image_canvas')[0].width,
+        image_container.getElementsByName('image_canvas')[0].height);
+    }
+    
+    createOrRemoveImagesAccordingToMessage(message){
+        var image_views_count = document.getElementById('image_view').children.length
+        for (var c=image_views_count-1; c>=message.images.length; c--){
+            document.getElementById('image_view').removeChild(document.getElementById('image_view').children[c])
+        }
+        for (var c=document.getElementById('image_view').children.length; c<message.images.length; c++){
+            addImage(String(c))
+        }
+
     }
     updateUV(){
         var model = this.getRenderedModel()
@@ -392,37 +456,40 @@ class FramesHandlerLive{
         document.getElementById('draw_uvs_on_texture').checked){
             var faces = model.children[0].geometry.index.array
             var uvs = model.children[0].geometry.attributes.uv.array 
-            this.updateUVmapVizualizationOnTextureImage(faces, uvs, document.getElementById("uv_image"))
+            this.updateUVmapVizualizationOnTextureImage(faces, uvs, document.getElementsByName("uv_image"))
         }
     }
     clearUVImage(image){
         var ctx = image.getContext("2d")
         ctx.clearRect(0, 0, image.width, image.height)
     }
-    updateUVmapVizualizationOnTextureImage(faces, uvs, image){
-        this.clearUVImage(image)
-        var ctx = image.getContext("2d")
-        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-        var width = image.width
-        var height = image.height
-        for (var f=0; f<faces.length/3; f++){
-            var triangle = []
-            var uv_00 = uvs[2*faces[3*f]]
-            var uv_01 = uvs[2*faces[3*f]+1] 
-            triangle.push([uv_00, uv_01])           
-            var uv_10 = uvs[2*faces[3*f+1]]
-            var uv_11 = uvs[2*faces[3*f+1]+1]
-            triangle.push([uv_10, uv_11])           
-            var uv_20 = uvs[2*faces[3*f+2]]
-            var uv_21 = uvs[2*faces[3*f+2]+1]
-            triangle.push([uv_20, uv_21]) 
-            // pushing the first point again to close the triangle          
-            triangle.push([uv_00, uv_01])           
-            for (var p=0; p<3; p++){
-                ctx.beginPath();
-                ctx.moveTo(triangle[p][0]*width, (1-triangle[p][1])*height);
-                ctx.lineTo(triangle[p+1][0]*width, (1-triangle[p+1][1])*height);
-                ctx.stroke();
+    updateUVmapVizualizationOnTextureImage(faces, uvs, images){
+        for (var i=0; i<images.length; i++){
+            var image = images[i]
+            this.clearUVImage(image)
+            var ctx = image.getContext("2d")
+            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+            var width = image.width
+            var height = image.height
+            for (var f=0; f<faces.length/3; f++){
+                var triangle = []
+                var uv_00 = uvs[2*faces[3*f]]
+                var uv_01 = uvs[2*faces[3*f]+1] 
+                triangle.push([uv_00, uv_01])           
+                var uv_10 = uvs[2*faces[3*f+1]]
+                var uv_11 = uvs[2*faces[3*f+1]+1]
+                triangle.push([uv_10, uv_11])           
+                var uv_20 = uvs[2*faces[3*f+2]]
+                var uv_21 = uvs[2*faces[3*f+2]+1]
+                triangle.push([uv_20, uv_21]) 
+                // pushing the first point again to close the triangle          
+                triangle.push([uv_00, uv_01])           
+                for (var p=0; p<3; p++){
+                    ctx.beginPath();
+                    ctx.moveTo(triangle[p][0]*width, (1-triangle[p][1])*height);
+                    ctx.lineTo(triangle[p+1][0]*width, (1-triangle[p+1][1])*height);
+                    ctx.stroke();
+                }
             }
         }
     }

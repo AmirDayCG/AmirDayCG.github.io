@@ -9,6 +9,20 @@ g_frame_time_target = 1/15
     }
  })
 
+ Element.prototype.getElementsByName = function (arg) {
+    var returnList = [];
+    (function BuildReturn(startPoint) {
+        for (var child in startPoint) {
+            if (startPoint[child].nodeType != 1) continue; //not an element
+            if (startPoint[child].getAttribute("name") == arg) returnList.push(startPoint[child]);
+            if (startPoint[child].childNodes.length > 0) {
+                BuildReturn(startPoint[child].childNodes);
+            }
+        }
+    })(this.childNodes);
+    return returnList;
+};
+
 var view = document.getElementById('main_viewer');
 if (!Detector.webgl) Detector.addGetWebGLMessage();
 var camera, scene, renderer, stats, controls;
@@ -231,7 +245,7 @@ $(document).ready(function() {
     // three_stats.dom.style.position = 'relative';
     // three_stats.dom.style.float = 'left';
     $("#video_container").draggable().resizable();
-    $("#texture_container").draggable().resizable();
+    // $("#texture_container").draggable().resizable();
     $("#stats").draggable().resizable();
     // $("#texture_container").draggable();
     var video = document.getElementById("video_player")
@@ -258,6 +272,7 @@ function removeNan(array) {
 }
 
 $('#show_video').change(function () {
+    if (!g_frame_handler instanceof FramesHandler) return   
     if ($('#show_video')[0].checked) {
         $("#video_container")[0].style.display = "block"
     }
@@ -266,37 +281,74 @@ $('#show_video').change(function () {
     }
 });
 
+function resizeTexturesToDefault(){
+    for (var c=0; c<document.getElementById('texture_view').children.length; c++){
+        document.getElementById('texture_view').children[c].style.width = '512px'
+        document.getElementById('texture_view').children[c].style.height = '512px'
+        fixtextureImageSizeAfterResize(document.getElementById('texture_view').children[c])
+    }
+}
+
+function resizeImageToDefault(){
+    if (g_frame_handler.last_message.images == undefined) return
+    for (var c=0; c<document.getElementById('image_view').children.length; c++){
+        
+        document.getElementById('image_view').children[c].style.width = 
+        String(g_frame_handler.last_message.images[c].imageWidth) + 'px'
+        document.getElementById('image_view').children[c].style.height = 
+        String(g_frame_handler.last_message.images[c].imageHeight) + 'px'
+        fixImageSizeAfterResize(document.getElementById('image_view').children[c])
+    }
+}
+
 $("#texture_view")[0].style.display = "none"
+
 $('#show_texture').change(function () {
     if ($('#show_texture')[0].checked) {
         $("#texture_view")[0].style.display = "block"
-        document.getElementById('texture_container').style.width = '512px'
-        document.getElementById('texture_container').style.height = '512px'
-        fixtextureImageSizeAfterResize()
+        resizeTexturesToDefault()
 
     }
     else {
         $("#texture_view")[0].style.display = "none"
     }
+    g_frame_handler.reShow()
+});
+
+$('#show_video').change(function () {
+    if (!g_frame_handler instanceof FramesHandlerLive) return   
+    if ($('#show_video')[0].checked) {
+        $("#image_view")[0].style.display = "block"
+        resizeImageToDefault()
+
+    }
+    else {
+        $("#image_view")[0].style.display = "none"
+    }
+    g_frame_handler.reShow()
 });
 
 
+
 $('#draw_uvs_on_texture').change(function () {
-    g_frame_handler.clearUVImage(document.getElementById("uv_image"))
-    g_frame_handler.updateUV()
+    for (var i=0; i<document.getElementsByName("uv_image").length; i++){
+        g_frame_handler.clearUVImage(document.getElementsByName("uv_image")[i])
+        g_frame_handler.updateUV()
+    }
 })
-function fixtextureImageSizeAfterResize(){
-    document.getElementById('uv_image').width = parseInt(document.getElementById('texture_container').style.width)
-    document.getElementById('texture_canvas').width = parseInt(document.getElementById('texture_container').style.width)
-    document.getElementById('texture_image').style.width = document.getElementById('texture_container').style.width
-    document.getElementById('uv_image').height = parseInt(document.getElementById('texture_container').style.height)
-    document.getElementById('texture_canvas').height = parseInt(document.getElementById('texture_container').style.height)
-    document.getElementById('texture_image').style.height = document.getElementById('texture_container').style.height
+function fixtextureImageSizeAfterResize(contatiner){
+    contatiner.getElementsByName('uv_image')[0].width = parseInt(contatiner.style.width)
+    contatiner.getElementsByName('texture_canvas')[0].width = parseInt(contatiner.style.width)
+    contatiner.getElementsByName('texture_image')[0].style.width = contatiner.style.width
+    contatiner.getElementsByName('uv_image')[0].height = parseInt(contatiner.style.height)
+    contatiner.getElementsByName('texture_canvas')[0].height = parseInt(contatiner.style.height)
+    contatiner.getElementsByName('texture_image')[0].style.height = contatiner.style.height
 }
-$('#texture_container').elementResize(function(event) {
-    fixtextureImageSizeAfterResize()
-    g_frame_handler.updateUV()
- });
+
+function fixImageSizeAfterResize(contatiner){
+    contatiner.getElementsByName('image_canvas')[0].width = parseInt(contatiner.style.width)
+    contatiner.getElementsByName('image_canvas')[0].height = parseInt(contatiner.style.height)
+}
 
 function showVideoTimeStamp(time_stamp){
     var video = document.getElementById("video_player")
@@ -327,6 +379,53 @@ function updateVideo(file){
     var video = document.getElementById("video_player")
     var fileURL = URL.createObjectURL(file);
     video.src = fileURL;
+}
+
+function addImage(image_id, width, height){
+    const node = document.createElement("div");
+    node.className = "movingDiv"
+    node.style.position = 'absolute'
+    node.style.left = String(50+parseInt(image_id)*3) + '%'
+    var id = 'image_container_'+String(image_id)
+    node.id = id
+    node.innerHTML = 
+    `<canvas hidden name="image_canvas_hidden" style="position: absolute;"></canvas>
+    <canvas name="image_canvas" style="position: absolute;"></canvas>`
+    document.getElementById("image_view").appendChild(node);
+    document.getElementById(id).style.width = String(width) + 'px'
+    document.getElementById(id).style.height = String(height) + 'px'
+    $("#"+id).draggable().resizable();
+
+    $('#' + id).elementResize(function(event) {
+        fixImageSizeAfterResize(event.target)
+     });
+     resizeImageToDefault()
+
+}
+
+function addTextureImage(model_id){
+    const node = document.createElement("div");
+    node.className = "movingDiv"
+    node.style.position = 'absolute'
+    node.style.left = String(70+parseInt(model_id)*3) + '%'
+    var id = 'texture_container_'+String(model_id)
+    node.id = id
+    node.innerHTML = 
+    `<canvas hidden name="texture_canvas_hidden" style="position: absolute;"></canvas>
+    <canvas name="texture_canvas" style="position: absolute;"></canvas>
+    <canvas name="uv_image" style="position: absolute;"></canvas>
+    <img name="texture_image">`
+    document.getElementById("texture_view").appendChild(node);
+    document.getElementById(id).style.width = '512px'
+    document.getElementById(id).style.height = '512px'
+    $("#"+id).draggable().resizable();
+
+    $('#' + id).elementResize(function(event) {
+        fixtextureImageSizeAfterResize(event.target)
+        g_frame_handler.updateUV()
+     });
+     resizeTexturesToDefault()
+
 }
 
 function parseQuery(queryString) {

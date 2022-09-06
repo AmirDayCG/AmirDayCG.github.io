@@ -13,7 +13,7 @@ function NetworkClient(ip, port) {
     this.socket.addEventListener('open', function (event){
         g_network_client_open = true;
         console.log('network is connected')
-        clearSceneFromModels()
+        clearFramesData()
         g_frame_handler = new FramesHandlerLive()
 
     })
@@ -34,7 +34,7 @@ function NetworkClient(ip, port) {
 
     this.socket.addEventListener('message', function (event) {
         g_message_counter++
-        console.log(g_message_counter)
+        // console.log(g_message_counter)
         protobuf.load("protobuf_schema/webviewer_v0.proto").then(function(root) {
             
             var bytes = new Uint8Array(event.data);
