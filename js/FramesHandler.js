@@ -18,6 +18,14 @@ var updateFrameHandlerAndSlider = function(files){
     document.getElementById("frames_slider").value = '1'
 }
 
+var updateFrameHandlerAndSlider2 = function(files){
+    clearFramesData()
+    g_frame_handler = new FramesHandlesFromDumpMasseges()
+    g_frame_handler.populateFromFiles(files)
+    document.getElementById("frames_slider").max = String(g_frame_handler.frames_buffer.getIndices().length)
+    document.getElementById("frames_slider").value = '1'
+}
+
 var clearTextureView = function(){
     document.getElementById('texture_view').innerHTML = ''
 }
@@ -498,6 +506,25 @@ class FramesHandlerLive{
     }
 }
 
+
+class FramesHandlesFromDumpMasseges extends FramesHandlerLive{
+    populateFromFiles(files){
+        this.files = sortFilesByIndex(files)
+    }
+    getIndices(){
+        return [...Array(this.files.length).keys()]
+    }
+    animate(){
+        scope = this
+        var message_file = this.files[this.frames_counter%this.files.length]
+        var reader = new FileReader();
+        reader.onload = function(event) {
+          console.log(event.target.result);
+          scope.handleMessage(event.target.result)            
+        }
+        reader.readAsBinaryString(message_file)
+    }
+}
 function putImageData(ctx, imageData, dx, dy,
     dirtyX, dirtyY, dirtyWidth, dirtyHeight) {
   const data = imageData.data;

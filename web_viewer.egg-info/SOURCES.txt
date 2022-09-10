@@ -1,0 +1,12 @@
+LICENSE
+README.md
+setup.py
+web_viewer/__init__.py
+web_viewer/web_viewer.py
+web_viewer.egg-info/PKG-INFO
+web_viewer.egg-info/SOURCES.txt
+web_viewer.egg-info/dependency_links.txt
+web_viewer.egg-info/requires.txt
+web_viewer.egg-info/top_level.txt
+web_viewer/protobuf_schema/__init__.py
+web_viewer/protobuf_schema/webviewer_v0_pb2.py

@@ -88,6 +88,55 @@ $("#point_light").slider({
     }
 });
 
+$("#point_light_position_x").slider({
+    orientation: "horizontal",
+    min: -1000,
+    max: 1000,
+    step: 0.1,
+    value: 0,
+    slide: function (event, ui) {
+        pointLight.position.x = parseFloat(ui.value);
+        pointLight.lookAt(0,0,0)
+    },
+    change: function (event, ui) {
+        pointLight.position.x = parseFloat(ui.value);
+        pointLight.lookAt(0,0,0)
+
+    }
+});
+
+$("#point_light_position_y").slider({
+    orientation: "horizontal",
+    min: -1000,
+    max: 1000,
+    step: 0.1,
+    value: 0,
+    slide: function (event, ui) {
+        pointLight.position.y = parseFloat(ui.value);
+        pointLight.lookAt(0,0,0)
+    },
+    change: function (event, ui) {
+        pointLight.position.y = parseFloat(ui.value);
+        pointLight.lookAt(0,0,0)
+    }
+});
+
+$("#point_light_position_z").slider({
+    orientation: "horizontal",
+    min: -1000,
+    max: 1000,
+    step: 0.1,
+    value: 500,
+    slide: function (event, ui) {
+        pointLight.position.z = parseFloat(ui.value);
+        pointLight.lookAt(0,0,0);
+    },
+    change: function (event, ui) {
+        pointLight.position.z = parseFloat(ui.value);
+        pointLight.lookAt(0,0,0)
+    }
+});
+
 //Set colour of glow model to value from colour
 $(".glow_select").spectrum({
     color: "#fff",
@@ -318,3 +367,59 @@ function getAllUrlParams(url) {
   
     return obj;
   }
+
+
+
+  function load_with_factorized(obj_path, texture_path, specular_path, roughness_path){
+    if (scene.children.length > 1){
+        scene.remove(scene.children[1])
+    }
+    var loader = new OBJSlimLoader(manager);
+    loader.load(obj_path, function (obj) {
+        let txt_loader = new THREE.TextureLoader(manager)
+        let roughness_loader = new THREE.TextureLoader(manager)
+        let metalness_loader = new THREE.TextureLoader(manager)
+
+        txt_loader.load(texture_path, function(txt){
+            roughness_loader.load(roughness_path, function(rough){
+                    metalness_loader.load(specular_path, function(metal){
+                        var group = new THREE.Group()
+                        group.name = 'model'
+                        var model = obj.obj;
+                        model.geometry.center()
+                        model.rotateX(Math.PI)
+                        var model_text_only = model.clone()
+                        var model_roughness = model.clone()
+                        var model_specular = model.clone()
+
+
+                        var my_mtl_text = new THREE.MeshStandardMaterial()
+                        var my_mtl_roughness = new THREE.MeshStandardMaterial()
+                        var my_mtl_specular = new THREE.MeshStandardMaterial()
+                        
+                        model_text_only.material = my_mtl_text
+                        my_mtl_text.map = txt
+                        my_mtl_text.roughness = 1
+                        scene.add(model_text_only)
+
+                        model_roughness.material = my_mtl_roughness
+                        my_mtl_roughness.map = txt
+                        my_mtl_roughness.roughnessMap = rough
+                        my_mtl_roughness.roughness = 1
+                        model_roughness.position.set(100,0,0)
+                        scene.add(model_roughness)
+
+                        model_specular.material = my_mtl_specular
+                        my_mtl_specular.map = txt
+                        my_mtl_specular.roughnessMap = rough
+                        my_mtl_specular.metalnessMap = metal
+                        my_mtl_specular.metalness = 0.5
+                        my_mtl_specular.roughness = 1
+                        model_specular.position.set(200,0,0)
+                        scene.add(model_specular)
+                        
+                    })
+            })
+        })
+    })
+}

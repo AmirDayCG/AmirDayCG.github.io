@@ -1,0 +1,5 @@
+numpy>=1.23.1
+Pillow>=9.2.0
+protobuf>=4.21.5
+uvloop>=0.16.0
+websockets>=10.3
