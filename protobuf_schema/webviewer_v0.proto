@@ -17,7 +17,8 @@ message Model{
     optional int32 texture_height = 7;
     repeated int32 faces = 8;
     repeated int32 faces_to_uv = 9;
-    repeated int32 uvs = 10;
+    repeated float uvs = 10;
+    repeated float vertices = 11;
 }
 
 message ObjUpdate {

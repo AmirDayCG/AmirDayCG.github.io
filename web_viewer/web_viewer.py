@@ -92,9 +92,6 @@ class WebViewer(metaclass=Singleton):
 
     def set_camera_position(self, x:float, y:float, z:float, rx:float, ry:float, rz:float):
         pass
-    
-    def update_obj(self, vertices: np.ndarray, texture: np.ndarray, material: Materials, obj_id:int):
-        pass
 
     def _build_translation_rotation(self, message_builder, model_translation: np.ndarray = None, model_rotation: np.ndarray = None):
         assert model_rotation is None or model_rotation.ravel().shape == (3,), 'global rotation must be of length 3 (x,y,z)'
@@ -104,12 +101,19 @@ class WebViewer(metaclass=Singleton):
         if model_rotation is not None:
             message_builder.model_rotation.extend(model_rotation.astype(float).ravel())
 
-    def _set_model(self, model_string:str, model_type:wv_proto.ModelType ,model_id:int, 
-                   model_translation: np.ndarray = None, model_rotation: np.ndarray = None,
-                   texture_width:int = None, texture_height:int=None):
+    def _set_model_from_string(self, model_string:str, model_type:wv_proto.ModelType ,model_id:int, 
+            model_translation: np.ndarray = None, model_rotation: np.ndarray = None,
+            texture_width:int = None, texture_height:int=None):
 
         model = self._frame_builder.models.add()
         model.model = model_string
+        self._set_model_meta_data(model, model_type=model_type ,model_id=model_id, 
+            model_translation=model_translation, model_rotation=model_rotation,
+            texture_width=texture_width, texture_height=texture_height)
+
+    def _set_model_meta_data(self, model, model_type:wv_proto.ModelType ,model_id:int, 
+            model_translation: np.ndarray = None, model_rotation: np.ndarray = None,
+            texture_width:int = None, texture_height:int=None):
         model.model_id = int(model_id)
         model.model_type = model_type
         if texture_width is not None:
@@ -126,11 +130,35 @@ class WebViewer(metaclass=Singleton):
     def set_fbx(self, fbx_string:str, fbx_id:int, global_translation: np.ndarray, global_rotation: np.ndarray):
         pass
 
-    def set_obj(self, obj_string:str, model_id:int, texture_width:int, texture_height:int,
+    def set_obj_from_string(self, obj_string:str, model_id:int, texture_width:int, texture_height:int,
                 model_translation: np.ndarray, model_rotation: np.ndarray):
-        self._set_model(model_string=obj_string, model_type=wv_proto.ModelType.OBJ, model_id=model_id, 
+        self._set_model_from_string(model_string=obj_string, model_type=wv_proto.ModelType.OBJ, model_id=model_id, 
         model_translation=model_translation, model_rotation=model_rotation, texture_width=texture_width, 
         texture_height=texture_height)
+
+    def set_obj_from_raw_data(self, faces:np.ndarray, uvs:np.ndarray, faces_to_uv:np.ndarray, vertices:np.ndarray,
+                model_id:int, texture_width:int, texture_height:int,
+                model_translation: np.ndarray, model_rotation: np.ndarray):
+        assert faces.shape[1] == 3, f'faces shape must be N,3 for {faces.shape}'
+        assert faces.dtype == np.int, f'face dtype must be int got {faces.dtype}' 
+
+        assert uvs.shape[1] == 2, f'uvs shape must be N,2 for {uvs.shape}'
+        assert uvs.dtype == np.float32, f'uvs dtype must be float got {uvs.dtype}' 
+
+        assert faces_to_uv.shape[1] == 3, f'faces_to_uv shape must be N,3 for {faces_to_uv.shape}'
+        assert faces_to_uv.dtype == np.int, f'faces_to_uv dtype must be int got {faces_to_uv.dtype}' 
+
+        assert vertices.shape[1] == 3, f'vertices shape must be N,2 for {vertices.shape}'
+        assert vertices.dtype == np.float32, f'faces_to_uv dtype must be float32 got {vertices.dtype}' 
+
+        model = self._frame_builder.models.add()
+        model.uvs.extend(uvs.ravel())
+        model.faces.extend(faces.ravel())
+        model.faces_to_uv.extend(faces_to_uv.ravel())
+        model.vertices.extend(vertices.ravel())
+        self._set_model_meta_data(model, model_type=wv_proto.ModelType.OBJ ,model_id=model_id, 
+        model_translation=model_translation, model_rotation=model_rotation,
+        texture_width=texture_width, texture_height=texture_height)
 
     def finish_frame(self):
         self._frames_counter += 1
@@ -149,25 +177,49 @@ class WebViewer(metaclass=Singleton):
     def clear_models():
         pass
     
-    def set_image(self, image_data:np.ndarray, image_width:int, image_height:int):
+    def set_image_rgb(self, image_data:np.ndarray, image_width:int, image_height:int):
         assert isinstance(image_data, np.ndarray), 'image_data must be type of np.ndarray'
         assert image_data.dtype == np.uint8, 'image_data dtype must be np.uint8'
+        assert image_data.shape[2] == 3, f'image data must have rgb channels got shape: {image_data.shape}'
+        
+        image_data_rgba_flat = (np.pad(image_data, (0, 1), 'constant', constant_values=(1,1)))[:-1, :-1, :].ravel()
+
         image = self._frame_builder.images.add()
-        image.image_data=image_data.ravel().tobytes()
+        image.image_data=image_data_rgba_flat.tobytes()
+        image.image_width = image_width
+        image.image_height = image_height
+
+    def set_image_rgba(self, image_data:np.ndarray, image_width:int, image_height:int):
+        assert isinstance(image_data, np.ndarray), 'image_data must be type of np.ndarray'
+        assert image_data.dtype == np.uint8, 'image_data dtype must be np.uint8'
+        assert image_data.shape[2] == 4, f'image data must have rgba channels got shape: {image_data.shape}'
+        
+        image_data_rgba_flat = image_data.ravel()
+
+        image = self._frame_builder.images.add()
+        image.image_data=image_data_rgba_flat.tobytes()
         image.image_width = image_width
         image.image_height = image_height
 
     def update_obj(self, id, vertices=None, texture:np.ndarray=None, model_translation:np.ndarray=None, model_rotation:np.ndarray=None):
-        assert isinstance(texture, np.ndarray), 'texture must be type of np.ndarray'
-        assert texture.dtype == np.uint8, 'texture dtype must be np.uint8'
+
         obj_update = self._frame_builder.obj_update.add()
         self._build_translation_rotation(message_builder=obj_update, model_translation=model_translation,
         model_rotation=model_rotation)
         obj_update.model_id = id
         if vertices is not None:
-            obj_update.vertices.extend(vertices.astype(float).ravel())
+            assert isinstance(vertices, np.ndarray), 'vertices must be type of np.ndarray'
+            assert vertices.dtype == np.float32, f'vertices dtype must be float got {vertices.dtype}'
+            assert vertices.shape[1] == 3, f'ivertices must have shape of [N,3] got shape: {vertices.shape}'
+            obj_update.vertices.extend(vertices.ravel())
         if texture is not None:
-            obj_update.texture=texture.ravel().tobytes()
+            assert isinstance(texture, np.ndarray), 'texture must be type of np.ndarray'
+            assert texture.dtype == np.uint8, f'texture dtype must be np.uint8 got {texture.dtype}'
+            assert texture.shape[2] == 3, f'image data must have rgb channels got shape: {texture.shape}'
+            
+            texture_data_rgba_flat = (np.pad(texture, (0, 1), 'constant', constant_values=(1,1)))[:-1, :-1, :].ravel()
+
+            obj_update.texture=texture_data_rgba_flat.tobytes()
 
     def update_fbx(self, blend_shapes: np.ndarray, joints: np.ndarray, texture: np.ndarray, material: Materials, fbx_id: int):
         pass
@@ -181,16 +233,16 @@ def main():
     with open('/Users/amirday/projects/AmirDayCG.github.io/sample_models/005538.obj', 'r') as f:
         obj_model = f.read()
     while True:
-        wv.set_obj(obj_string=obj_model, model_id=1, 
+        wv.set_obj_from_string(obj_string=obj_model, model_id=1, 
         model_rotation=np.array([0,0,0]), model_translation=np.array([-0.3,0,0]), 
         texture_height=512, texture_width=512)
-        wv.set_obj(obj_string=obj_model, model_id=3, 
+        wv.set_obj_from_string(obj_string=obj_model, model_id=3, 
         model_rotation=np.array([0,0,0]), model_translation=np.array([0.3,0,0]), 
         texture_height=512, texture_width=512)
-        wv.set_obj(obj_string=obj_model, model_id=4, 
+        wv.set_obj_from_string(obj_string=obj_model, model_id=4, 
         model_rotation=np.array([0,0,0]), model_translation=np.array([0.3,0.3,0]), 
         texture_height=512, texture_width=512)
-        wv.set_obj(obj_string=obj_model, model_id=2, 
+        wv.set_obj_from_string(obj_string=obj_model, model_id=2, 
         model_rotation=np.array([0,0,0]), model_translation=np.array([-0.3,0.3,0]), 
         texture_height=512, texture_width=512)
         wv.finish_frame()
@@ -206,18 +258,18 @@ def main():
                 name = f'mesh{str(i).zfill(6)}'
                 texture_image = image.imread(f'/Users/amirday/Downloads/vid_all_files 2/{name}.png')
                 texture_imag_2 = texture_image *3
-                texture = (np.pad(texture_image, (0, 1), 'constant', constant_values=(1,1))*255)[:-1, :-1, :].astype(np.uint8).ravel()
-                texture_2 = (np.pad(texture_imag_2, (0, 1), 'constant', constant_values=(1,1))*255)[:-1, :-1, :].astype(np.uint8).ravel()
+                # texture = (np.pad(texture_image, (0, 1), 'constant', constant_values=(1,1))*255)[:-1, :-1, :].astype(np.uint8).ravel()
+                # texture_2 = (np.pad(texture_imag_2, (0, 1), 'constant', constant_values=(1,1))*255)[:-1, :-1, :].astype(np.uint8).ravel()
                 print(f'preperation: {time.time() - ptime}')
                 pttime = time.time()
-                wv.update_obj(1, vertices=vertices, texture=texture)
-                wv.update_obj(3, vertices=vertices, texture=texture_2)
-                wv.update_obj(4, vertices=vertices, texture=texture_2)
-                wv.update_obj(2, vertices=vertices, texture=texture_2)
+                wv.update_obj(1, vertices=vertices, texture=texture_image)
+                wv.update_obj(3, vertices=vertices, texture=texture_imag_2)
+                wv.update_obj(4, vertices=vertices, texture=texture_imag_2)
+                wv.update_obj(2, vertices=vertices, texture=texture_imag_2)
                 # wv.set_image(image_data=texture, image_width=512, image_height=512)
                 # wv.set_image(image_data=texture_2, image_width=512, image_height=512)
                 if (i < 20) or (i>60):
-                    wv.set_image(image_data=texture_2, image_width=512, image_height=512)
+                    wv.set_image_rgb(image_data=texture_imag_2, image_width=512, image_height=512)
                 print(f'proto_time: {time.time() - pttime}')
                 stime = time.time()
                 wv.finish_frame()

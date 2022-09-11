@@ -350,6 +350,28 @@ class FramesHandlerLive{
           }
         stats(this.frames_counter, faces_count, models_count)
     }
+    LoadObjModelFromRawData(faces, uvs, faces2uvs, vertices, id, texture_width, texture_height, translation, rotation){
+        var obj = new OBJModel(faces, faces2uvs, uvs, materials.default_material.clone(), texture_width, texture_height)
+        obj.UpdateOrCreate(vertices, undefined)
+
+        if(translation != undefined){
+            obj.obj.position.set(translation[0], translation[1], translation[2])
+        }
+        if (rotation!=undefined){
+            obj.obj.rotation.set(rotation[0], rotation[1], rotation[2])
+        }
+        this.models[id] = obj
+        clearTextureView()
+        this.createTextureContainers()
+        // every loaded object remove and re-add the models
+        scene.remove(this.models_group)
+        this.models_group = new THREE.Group()
+        for (const [key, value] of Object.entries(this.models)) {
+            this.models_group.add(value.obj)
+          }
+        scene.add(this.models_group)
+    }
+
     LoadObjModelFromString(model_string, id, texture_width, texture_height, translation, rotation){
         var blob = new Blob([model_string], { type: 'text/plain' });
         var loader = new OBJSlimLoader(manager);
@@ -409,8 +431,13 @@ class FramesHandlerLive{
         if (message.models != undefined){
             for (var m=0; m<message.models.length; m++ ){
                 var model = message.models[m]
-                if (model.model != undefined){
+                if (model.model != ''){
                     this.LoadObjModelFromString(model.model, model.modelId, model.textureWidth, 
+                        model.textureHeight, model.modelTranslation, model.modelRotation)
+                }
+                if (model.faces != undefined){
+                    this.LoadObjModelFromRawData(model.faces, model.uvs, model.facesToUv, model.vertices, 
+                        model.modelId, model.textureWidth, 
                         model.textureHeight, model.modelTranslation, model.modelRotation)
                 }
             }
