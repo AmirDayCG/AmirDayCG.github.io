@@ -9,9 +9,9 @@ setup(name='web_viewer',
       url='https://github.com/AmirDayCG/AmirDayCG.github.io',
       packages=find_packages(),
       install_requires=[
-        "numpy >= 1.23.1",
+        "numpy >= 1.21.6",
         "Pillow >= 9.2.0",
-        "protobuf >= 4.21.5",
+        "protobuf >= 3.19.4",
         "uvloop >= 0.16.0",
         "websockets >= 10.3"
    ],
