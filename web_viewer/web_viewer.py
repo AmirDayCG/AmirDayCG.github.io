@@ -48,10 +48,11 @@ class Singleton(type):
 
 class WebViewer(metaclass=Singleton):
     _web_viewer_instance = None
-    def __init__(self, local_website_hosting=False, dump_dir:Path=None, show:bool=True):
+    def __init__(self, local_website_hosting=False, dump_dir:Path=None, show:bool=True, websocket_port=4000):
         assert isinstance(dump_dir, Path) or dump_dir is None, 'dump_dir must be type of path (or None)'
         self._frames_counter = 0
         self._dump_dir = dump_dir
+        self._web_socket_port = websocket_port
         if self._dump_dir != None:
             if self._dump_dir.exists():
                 shutil.rmtree(self._dump_dir)
@@ -85,7 +86,7 @@ class WebViewer(metaclass=Singleton):
         return '127.0.0.1'
 
     def _get_python_servet_port(self):
-        return 4000
+        return self._web_socket_port
 
     def _print_connection_string(self, website_host, python_servet_ip_string, python_servet_port):
         return print(f'{website_host}?ip={python_servet_ip_string}&port={python_servet_port}')

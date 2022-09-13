@@ -393,28 +393,27 @@ function getAllUrlParams(url) {
                         var model_specular = model.clone()
 
 
-                        var my_mtl_text = new THREE.MeshStandardMaterial()
-                        var my_mtl_roughness = new THREE.MeshStandardMaterial()
-                        var my_mtl_specular = new THREE.MeshStandardMaterial()
+                        var my_mtl_text = new THREE.MeshPhysicalMaterial()
+                        var my_mtl_roughness = new THREE.MeshPhysicalMaterial()
+                        var my_mtl_specular = new THREE.MeshPhysicalMaterial()
                         
                         model_text_only.material = my_mtl_text
                         my_mtl_text.map = txt
-                        my_mtl_text.roughness = 1
                         scene.add(model_text_only)
 
                         model_roughness.material = my_mtl_roughness
                         my_mtl_roughness.map = txt
-                        my_mtl_roughness.roughnessMap = rough
-                        my_mtl_roughness.roughness = 1
+                        my_mtl_specular.clearcoatRoughnessMap = rough
+                        my_mtl_specular.clearcoatRoughness = 1
                         model_roughness.position.set(100,0,0)
                         scene.add(model_roughness)
 
                         model_specular.material = my_mtl_specular
                         my_mtl_specular.map = txt
-                        my_mtl_specular.roughnessMap = rough
-                        my_mtl_specular.metalnessMap = metal
-                        my_mtl_specular.metalness = 0.5
-                        my_mtl_specular.roughness = 1
+                        my_mtl_specular.clearcoatRoughnessMap = rough
+                        my_mtl_specular.specularIntensityMap = metal
+                        my_mtl_specular.specularIntensity = 1
+                        my_mtl_specular.clearcoatRoughness = 1
                         model_specular.position.set(200,0,0)
                         scene.add(model_specular)
                         

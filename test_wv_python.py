@@ -56,9 +56,9 @@ if __name__ == '__main__':
                 print(f'preperation: {time.time() - ptime}')
                 pttime = time.time()
                 wv.update_obj(1, vertices=vertices, texture=texture_image)
-                wv.update_obj(3, vertices=vertices, texture=texture_imag_2)
-                wv.update_obj(4, vertices=vertices, texture=texture_imag_2)
-                wv.update_obj(2, vertices=vertices, texture=texture_imag_2)
+                # wv.update_obj(3, vertices=vertices, texture=texture_imag_2)
+                # wv.update_obj(4, vertices=vertices, texture=texture_imag_2)
+                # wv.update_obj(2, vertices=vertices, texture=texture_imag_2)
                 # wv.set_image(image_data=texture, image_width=512, image_height=512)
                 # wv.set_image(image_data=texture_2, image_width=512, image_height=512)
                 # if (i < 20) or (i>60):
