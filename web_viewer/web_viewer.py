@@ -48,9 +48,10 @@ class Singleton(type):
 
 class WebViewer(metaclass=Singleton):
     _web_viewer_instance = None
-    def __init__(self, local_website_hosting=False, dump_dir:Path=None, show:bool=True, websocket_port=4000):
+    def __init__(self, local_website_hosting=False, dump_dir:Path=None, show:bool=True, websocket_port=4000, web_socket_ip='127.0.0.1'):
         assert isinstance(dump_dir, Path) or dump_dir is None, 'dump_dir must be type of path (or None)'
         self._frames_counter = 0
+        self._web_socket_ip = web_socket_ip
         self._dump_dir = dump_dir
         self._web_socket_port = websocket_port
         if self._dump_dir != None:
@@ -83,7 +84,7 @@ class WebViewer(metaclass=Singleton):
         self._protobuf_frame_builder = None
 
     def _get_python_servet_ip_string(self):
-        return '127.0.0.1'
+        return self._web_socket_ip
 
     def _get_python_servet_port(self):
         return self._web_socket_port
