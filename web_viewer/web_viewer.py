@@ -48,10 +48,10 @@ class Singleton(type):
 
 class WebViewer(metaclass=Singleton):
     _web_viewer_instance = None
-    def __init__(self, local_website_hosting=False, dump_dir:Path=None, show:bool=True, websocket_port=4000, web_socket_ip='127.0.0.1'):
+    def __init__(self, local_website_hosting=False, dump_dir:Path=None, show:bool=True, websocket_port=4000, websocket_ip='192.168.17.85'):
         assert isinstance(dump_dir, Path) or dump_dir is None, 'dump_dir must be type of path (or None)'
         self._frames_counter = 0
-        self._web_socket_ip = web_socket_ip
+        self._web_socket_ip = websocket_ip
         self._dump_dir = dump_dir
         self._web_socket_port = websocket_port
         if self._dump_dir != None:
@@ -184,7 +184,7 @@ class WebViewer(metaclass=Singleton):
         assert image_data.dtype == np.uint8, 'image_data dtype must be np.uint8'
         assert image_data.shape[2] == 3, f'image data must have rgb channels got shape: {image_data.shape}'
         
-        image_data_rgba_flat = (np.pad(image_data, (0, 1), 'constant', constant_values=(1,1)))[:-1, :-1, :].ravel()
+        image_data_rgba_flat = (np.pad(image_data, (0, 1), 'constant', constant_values=(255,255)))[:-1, :-1, :].ravel()
 
         image = self._frame_builder.images.add()
         image.image_data=image_data_rgba_flat.tobytes()
